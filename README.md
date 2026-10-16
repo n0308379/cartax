@@ -23,6 +23,17 @@ CartaX é um protótipo de uma app para quem está a tirar a carta de condução
 
 O progresso fica guardado no browser de cada pessoa.
 
+### Instalar no telemóvel
+
+O CartaX é uma app web instalável (PWA). Depois de abrir o link no telemóvel:
+
+- **Android (Chrome):** menu ⋮ → **Instalar app** (ou **Adicionar ao ecrã principal**).
+- **iPhone (Safari):** botão Partilhar → **Adicionar ao ecrã principal**.
+
+Abre em ecrã inteiro, com ícone próprio, e funciona sem rede depois da primeira visita.
+
+> Ao alterar a app, sobe a versão em `sw.js` (`cartax-v1` → `cartax-v2`) para os telemóveis receberem a versão nova.
+
 ## Limitações do protótipo
 
 - As explicações do tutor estão escritas à mão. Na versão final, viriam de um modelo de IA treinado com o Código da Estrada.
@@ -40,3 +51,16 @@ O progresso fica guardado no browser de cada pessoa.
 ## Tecnologia
 
 HTML, CSS e JavaScript simples. Os cenários são desenhados em SVG e o simulador em Canvas. Não usa bibliotecas.
+
+| Ficheiro | Para que serve |
+|---|---|
+| `index.html` | A app inteira. |
+| `manifest.webmanifest` | Nome, cores e ícones para instalar a app. |
+| `sw.js` | Service worker: guarda a app para funcionar sem rede. |
+| `icons/` | Ícones da app (SVG e PNG). |
+
+### Plataformas
+
+1. **Web e telemóvel (agora):** a mesma página serve computador e telemóvel, e pode ser instalada como PWA.
+2. **Conta e sincronização (a seguir):** guardar o progresso num backend (por exemplo Supabase ou Firebase) para passar entre aparelhos e ter um ranking real.
+3. **App nas lojas (mais tarde):** embrulhar esta mesma app web com [Capacitor](https://capacitorjs.com) para publicar na App Store e no Google Play, com notificações push.
