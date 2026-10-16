@@ -23,6 +23,8 @@ CartaX é um protótipo de uma app para quem está a tirar a carta de condução
 
 O progresso fica guardado no browser de cada pessoa.
 
+**Modo vídeo:** abre `cartax.skyxlee.com/#video` (ou toca em "Modo vídeo · 1 minuto" no fim do percurso). A app faz sozinha uma demonstração de 60 segundos, com legendas, pronta a gravar o ecrã de uma só vez.
+
 ## Limitações do protótipo
 
 - As explicações do tutor estão escritas à mão. Na versão final, viriam de um modelo de IA treinado com o Código da Estrada.

@@ -125,6 +125,29 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .sbtn.gas{background:color-mix(in srgb,var(--ok) 25%,var(--asphalt-2));border-color:var(--ok)}
 .sbtn.brake.on{background:var(--red)} .sbtn.gas.on{background:var(--ok)}
 .hz-item .tutor{margin-top:6px}
+.demo-btn{width:100%;margin-top:14px}
+.video .scene{width:64%;margin-inline:auto}
+.video .q{font-size:22px;margin:12px 0 10px}
+.video .opt{padding:10px 12px}
+.video .hz-wrap{display:flex;justify-content:center}
+.video .hz-wrap canvas{width:auto;max-width:100%;max-height:calc(100vh - 380px)}
+.video .app:has(.qhead){padding-bottom:110px}
+.tap{position:fixed;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.3);border:3px solid #fff;pointer-events:none;z-index:60;animation:tap .65s ease-out forwards}
+@keyframes tap{from{transform:scale(.4);opacity:1}to{transform:scale(1.5);opacity:0}}
+#cap{position:fixed;left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 24px));z-index:55;background:rgba(14,15,18,.9);color:var(--paint);border-left:5px solid var(--amber);border-radius:8px;padding:12px 14px;font-family:var(--display);font-weight:700;font-size:24px;line-height:1.15;text-wrap:balance;pointer-events:none;box-sizing:border-box}
+#cap.top{top:calc(env(safe-area-inset-top,0px) + 10px)} #cap.bottom{bottom:calc(env(safe-area-inset-bottom,0px) + 14px)}
+#cap.in{animation:capin .35s ease-out}
+@keyframes capin{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+#card{position:fixed;inset:0;z-index:58;background:var(--asphalt);display:grid;place-items:center;padding:24px max(24px,env(safe-area-inset-right,0px)) 24px max(24px,env(safe-area-inset-left,0px));text-align:center}
+#card .card-in{display:grid;gap:18px;max-width:380px;justify-items:center}
+#card .brand.big{font-size:64px}
+#card .brand.big b{padding:0 12px;border-radius:8px}
+.card-line{margin:0;font-family:var(--display);font-weight:700;font-size:32px;line-height:1.1;text-wrap:balance;animation:capin2 .5s ease-out}
+.card-line.accent{color:var(--amber)}
+.card-url{margin:0;font-family:var(--display);font-weight:600;font-size:22px;letter-spacing:.04em;color:var(--sign-hi);animation:capin2 .5s ease-out}
+.card-hint{margin:0;color:var(--muted);font-size:15px}
+#card .btn{min-width:200px}
+@keyframes capin2{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -138,7 +161,8 @@ const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 /* ---------- state ---------- */
 const store={get(){try{return JSON.parse(localStorage.getItem("cartax")||"null")}catch(e){return null}},set(v){try{localStorage.setItem("cartax",JSON.stringify(v))}catch(e){}}};
 let S=store.get()||{xp:120,streak:3,goalMin:4,done:{}};
-const save=()=>store.set(S);
+let DEMO=false;
+const save=()=>{if(!DEMO)store.set(S)};
 
 /* ---------- sign & scene drawing ---------- */
 const sg={
@@ -242,7 +266,9 @@ function home(){
    <button class="node hazard ${S.done.hz!=null?"done":""}" data-hz><span class="pin">${S.done.hz!=null?"✓":"!"}</span>${sg.hazard()}<span class="txt"><h3>Missão: Vê o perigo</h3><p>Deteta o risco antes de ele acontecer</p></span>${S.done.hz!=null?`<span class="tag">${S.done.hz} pts</span>`:`<span class="tag">NOVO</span>`}</button>
    <button class="node boss" disabled><span class="pin">★</span>${sg.boss()}<span class="txt"><h3>Exame final</h3><p>Simulação real do exame · em breve</p></span></button>
   </div>
-  <div class="board"><span class="label">Ranking da semana</span><ol>${friends.map((f,i)=>`<li class="${f[0]==="Tu"?"me":""}"><span class="n">${i+1}</span><span class="who">${f[0]}</span><span>${f[1]} XP</span></li>`).join("")}</ol><p class="note">Amigos de exemplo, para demonstração.</p></div>`;
+  <div class="board"><span class="label">Ranking da semana</span><ol>${friends.map((f,i)=>`<li class="${f[0]==="Tu"?"me":""}"><span class="n">${i+1}</span><span class="who">${f[0]}</span><span>${f[1]} XP</span></li>`).join("")}</ol><p class="note">Amigos de exemplo, para demonstração.</p></div>
+  <button class="btn ghost demo-btn" id="demo">▶ Modo vídeo · 1 minuto</button>`;
+  $app.querySelector("#demo").onclick=runDemo;
   $app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>startLevel(b.dataset.l));
   $app.querySelector("[data-hz]").onclick=hazardIntro;
   $app.querySelector("[data-sim]").onclick=simIntro;
@@ -334,7 +360,7 @@ const V=110; // px per second
 function startHz(){
   document.getElementById("ov").hidden=true;
   const b=document.getElementById("hz");b.disabled=false;
-  hz={t:0,last:performance.now(),taps:[],hits:[null,null],false:0,raf:0};
+  hz={t:DEMO?2.4:0,last:performance.now(),taps:[],hits:[null,null],false:0,raf:0};
   const tap=()=>{if(!hz)return;const t=hz.t;let hit=false;
     HZ.forEach((h,i)=>{if(hz.hits[i]==null&&t>=h.t0&&t<=h.t1){const d=t-h.t0;hz.hits[i]=d<1?5:d<2?3:1;hit=true}});
     if(!hit)hz.false++;hz.taps.push({t,ok:hit})};
@@ -423,7 +449,7 @@ function simIntro(){
 function startSim(k){
   document.getElementById("ov").hidden=true;
   const exitAng=-90+90*k;
-  sim={k,exitAng,phase:"approach",t:0,last:performance.now(),x:CX+15,y:SH+70,v:70,blink:null,lane:"out",r:R_OUT,th:-78,blend:0,errs:new Set(),brake:false,gas:false,
+  sim={k,exitAng,demo:DEMO,phase:"approach",t:0,last:performance.now(),x:CX+15,y:SH+70,v:70,blink:null,lane:"out",r:R_OUT,th:-78,blend:0,errs:new Set(),brake:false,gas:false,
     signalAtChange:true,changing:false,rightOnAt:null,passedPrev:false,laps:0,
     ai:[{th:-150,lane:R_OUT,w:0,col:"#c9c3b4"},{th:30,lane:R_OUT,w:0,col:"#a35b4a"},{th:160,lane:R_IN,w:0,col:"#6f7f95"}],
     msg:k===1?"Missão: sai na 1.ª saída":"Missão: sai na 3.ª saída",flash:0,flashCol:C.red,raf:0};
@@ -436,7 +462,7 @@ function startSim(k){
   document.getElementById("lo").onclick=()=>changeLane("out");
   btnHold("bk","brake");btnHold("gs","gas");
   updBlink();
-  const loop=now=>{if(!sim||sim.phase==="done")return;const dt=Math.min(.05,(now-sim.last)/1000);sim.last=now;stepSim(dt);drawSim();sim.raf=requestAnimationFrame(loop)};
+  const loop=now=>{if(!sim||sim.phase==="done")return;const dt=Math.min(.05,(now-sim.last)/1000);sim.last=now;stepSim(dt);drawSim();if(sim)sim.raf=requestAnimationFrame(loop)};
   sim.raf=requestAnimationFrame(loop);
 }
 function stopSim(){if(sim){cancelAnimationFrame(sim.raf);sim=null}}
@@ -453,8 +479,8 @@ function changeLane(to){
 }
 const norm=a=>{a=((a%360)+540)%360-180;return a};
 function stepSim(dt){
-  const s=sim;s.t+=dt;s.flash=Math.max(0,s.flash-dt*1.2);
-  const target=s.brake?0:s.gas?180:(s.phase==="approach"?70:100);
+  const s=sim;s.t+=dt;s.flash=Math.max(0,s.flash-dt*1.2);if(s.demo)simAutopilot(s,dt);
+  const target=s.brake?0:s.gas?180:(s.phase==="approach"?70:(s.demo?85:100));
   const rate=s.brake?220:120;
   s.v+=Math.max(-rate*dt,Math.min(rate*dt,target-s.v));
   const kmh=Math.round(s.v/4);const el=document.getElementById("kmh");if(el)el.textContent=kmh+" km/h";
@@ -466,7 +492,7 @@ function stepSim(dt){
     s.y-=s.v*dt;
     if(s.y<CY+R_OUT+42&&s.y>CY+R_OUT+18&&s.v>5)s.msg="Cede a quem circula: olha para a esquerda";
     if(s.y<=CY+R_OUT+20){
-      const conflict=s.ai.some(a=>{const d=norm(-78-a.th);return a.lane===R_OUT?(d>-12&&d<70):(d>-5&&d<30)});
+      const conflict=simConflict(s);
       if(conflict)flag("yield");else if(!s.errs.has("yield")){s.flash=1;s.flashCol=C.ok;s.msg="Boa entrada. "+(s.k===1?"Mantém-te na via exterior.":"Podes usar a via interior.")}
       s.phase="ring";s.th=-78;s.blend=0;s.bx=s.x;s.by=s.y;if(s.k>1&&s.blink==="R")flag("early");
     }
@@ -551,7 +577,83 @@ function endSim(){
   document.getElementById("again").onclick=()=>{simIntro();startSim(k===1?3:1)};
 }
 
+function simConflict(s){return s.ai.some(a=>{const d=norm(-78-a.th);return a.lane===R_OUT?(d>-12&&d<70):(d>-5&&d<30)})}
+/* ---------- video mode: 1-minute self-playing demo ---------- */
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const until=(f)=>new Promise(r=>{const t=setInterval(()=>{if(f()){clearInterval(t);r()}},50)});
+function tapAt(target,doClick=true){
+  const el=typeof target==="string"?(document.getElementById(target)||document.querySelector(target)):target;if(!el)return;
+  const b=el.getBoundingClientRect(),d=document.createElement("div");d.className="tap";
+  d.style.left=(b.left+b.width/2)+"px";d.style.top=(b.top+b.height/2)+"px";document.body.appendChild(d);setTimeout(()=>d.remove(),700);
+  if(doClick)el.click();
+}
+function cap(text,pos="top"){
+  let c=document.getElementById("cap");
+  if(!c){c=document.createElement("div");c.id="cap";document.body.appendChild(c)}
+  c.hidden=!text;if(!text)return;c.className=pos;c.textContent=text;
+  c.classList.remove("in");void c.offsetWidth;c.classList.add("in");
+}
+function card(html){
+  let k=document.getElementById("card");
+  if(!k){k=document.createElement("div");k.id="card";document.body.appendChild(k)}
+  k.hidden=!html;if(html)k.innerHTML=`<div class="card-in">${html}</div>`;return k;
+}
+function simAutopilot(s,dt){
+  const bk=document.getElementById("bk");
+  if(s.phase==="approach"){
+    const want=s.y<CY+R_OUT+70&&simConflict(s);
+    if(want!==s.brake){s.brake=want;bk&&bk.classList.toggle("on",want)}
+    return;
+  }
+  if(s.brake){s.brake=false;bk&&bk.classList.remove("on")}
+  if(s.phase!=="ring"||s.blend<1)return;
+  const a=s.ap||(s.ap={st:0,t:0});a.t+=dt;
+  if(a.st===0&&s.th>-55){tapAt("bl");a.st=1;a.t=0}
+  else if(a.st===1&&a.t>.45){tapAt("li");a.st=2}
+  else if(a.st===2&&s.passedPrev){tapAt("br");a.st=3;a.t=0}
+  else if(a.st===3&&a.t>.15){tapAt("lo");a.st=4}
+}
+async function runDemo(){
+  if(DEMO)return;
+  const backup=S;S={xp:120,streak:3,goalMin:4,done:{}};DEMO=true;document.documentElement.classList.add("video");
+  home();
+  const brand=`<div class="brand big"><b>Carta</b>X</div>`;
+  card(`${brand}<p class="card-hint">Começa a gravar o ecrã (com o microfone ligado, se fores narrar) e depois toca em Iniciar. A demonstração dura 1 minuto e as legendas servem de guião.</p><button class="btn amber" id="go-demo">Iniciar</button>`);
+  await new Promise(r=>document.getElementById("go-demo").onclick=r);
+  const T0=performance.now(),at=ms=>until(()=>performance.now()-T0>=ms);
+  card(`${brand}<p class="card-line" id="l1">Passei no exame de código.</p><p class="card-line" id="l2" hidden>Mas no primeiro dia ao volante, não sabia o que fazer.</p>`);
+  await at(2400);document.getElementById("l2").hidden=false;
+  await at(6000);card(null);home();cap("CartaX: 10 minutos por dia, como no Duolingo.","bottom");
+  await at(8000);tapAt('[data-l="prio"]',false);
+  await at(8600);startLevel("prio");run.queue=[1];question();cap("Erras? O tutor explica-te porquê.");
+  await at(11000);tapAt('.opt[data-i="0"]');
+  await at(16000);tapAt("more");cap("E dá-te um exemplo para fixares a regra.");
+  await wait(250);document.getElementById("fb")?.scrollIntoView({behavior:"smooth",block:"end"});
+  await at(21000);simIntro();scrollTo(0,0);cap("Depois praticas ao volante, sem risco.","bottom");
+  await at(22300);tapAt('[data-k="3"]');
+  await until(()=>!sim||sim.phase==="ring");cap("Cedo a quem já circula, sinalizo e escolho a via.","bottom");
+  await until(()=>!sim);cap("Cada decisão é avaliada.");
+  await wait(2600);
+  hazardIntro();scrollTo(0,0);cap("E aprendes a ver o perigo antes de ele acontecer.","bottom");
+  await wait(900);tapAt("st");
+  await until(()=>!hz||hz.t>=3.55);tapAt("hz");
+  await until(()=>!hz||hz.t>=8.95);tapAt("hz");
+  await until(()=>!hz);cap("Sabes o que viste a tempo e o que te escapou.","bottom");
+  await at(54500);cap(null);
+  card(`${brand}<p class="card-line">Não decores respostas.</p><p class="card-line accent" id="o2" hidden>Aprende a pensar como um condutor.</p><p class="card-url" id="o3" hidden>cartax.skyxlee.com</p>`);
+  await wait(1500);document.getElementById("o2").hidden=false;
+  await wait(1500);document.getElementById("o3").hidden=false;
+  await at(Math.max(60000,performance.now()-T0+3000));
+  const k=card(`${brand}<p class="card-line">Não decores respostas.</p><p class="card-line accent">Aprende a pensar como um condutor.</p><p class="card-url">cartax.skyxlee.com</p><button class="btn ghost" id="end-demo">Sair do modo vídeo</button>`);
+  k.classList.add("still");
+  await new Promise(r=>document.getElementById("end-demo").onclick=r);
+  card(null);DEMO=false;S=backup;document.documentElement.classList.remove("video");
+  try{history.replaceState(null,"",location.pathname)}catch(e){}
+  home();
+}
+
 home();
+if(location.hash==="#video")runDemo();
 </script>
 </body>
 </html>
