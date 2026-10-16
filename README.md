@@ -4,8 +4,6 @@
 
 CartaX é um protótipo de uma app para quem está a tirar a carta de condução. Junta lições curtas ao estilo Duolingo, um tutor que explica cada erro, um simulador de condução e treino de perceção de perigo. O foco é a segurança: preparar o aluno para a estrada, e não só para o exame.
 
-Projeto criado para o concurso **Reinventa o Código**, da Brisa.
-
 ## O que tem o protótipo
 
 | Parte | O que faz |
