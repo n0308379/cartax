@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#23262b">
+<title>CartaX</title>
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one phone-width column, asphalt ground, road-paint and sign colours as the only accents. Single dark theme by choice. */
+:root{
+  --asphalt:#23262b; --asphalt-2:#2d3137; --asphalt-3:#3a3f46;
+  --paint:#ece8dc; --muted:#a3a8af;
+  --sign:#1f63b8; --sign-hi:#5b9be6;
+  --red:#d63d2f; --amber:#f2b634; --ok:#44a96d;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--asphalt);color:var(--paint);font-family:var(--body);font-size:16px;line-height:1.45}
+.app{max-width:440px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 20px;box-sizing:border-box}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.label{font-family:var(--display);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted);font-weight:600}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:6px 14px}
+.brand{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.brand b{background:var(--sign);color:#fff;padding:0 7px;border-radius:4px}
+.stats{display:flex;gap:14px;font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.stat{display:flex;align-items:center;gap:5px}
+.stat svg{width:20px;height:20px}
+
+/* goal strip */
+.goal{background:var(--asphalt-2);border-radius:10px;padding:12px 14px;display:grid;gap:8px}
+.goal-row{display:flex;justify-content:space-between;align-items:baseline}
+.bar{height:10px;border-radius:5px;background:var(--asphalt-3);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--amber);border-radius:5px;transition:width .5s}
+
+/* road path of levels */
+.path{position:relative;margin-block:22px 8px;display:grid;gap:18px;padding-left:46px}
+.path::before{content:"";position:absolute;left:19px;top:10px;bottom:10px;width:4px;background:repeating-linear-gradient(var(--paint) 0 14px,transparent 14px 26px);opacity:.45}
+.node{position:relative;display:flex;align-items:center;gap:12px;background:var(--asphalt-2);border:2px solid transparent;border-radius:12px;padding:12px 14px;text-align:left;width:100%}
+.node:hover:not(:disabled){border-color:var(--sign-hi)}
+.node:disabled{opacity:.5;cursor:not-allowed}
+.node .pin{position:absolute;left:-42px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--sign);font-family:var(--display);font-weight:800;font-size:17px;color:#fff;border:3px solid var(--asphalt)}
+.node.hazard .pin{background:var(--amber);color:#1b1b1b}
+.node.boss .pin{background:var(--red)}
+.node.done .pin{background:var(--ok)}
+.node .txt{flex:1;min-width:0}
+.node h3{font-size:22px;line-height:1.1}
+.node p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.node .tag{font-family:var(--display);font-weight:700;font-size:14px;color:var(--amber);white-space:nowrap}
+.node svg.sg{width:38px;height:38px;flex:none}
+
+.board{margin-top:18px;background:var(--asphalt-2);border-radius:10px;padding:12px 14px}
+.board ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.board li{display:flex;gap:10px;align-items:center;font-variant-numeric:tabular-nums}
+.board li .n{width:18px;font-family:var(--display);font-weight:700;color:var(--muted)}
+.board li .who{flex:1}
+.board li.me{color:var(--amber);font-weight:700}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* quiz */
+.qhead{display:flex;align-items:center;gap:12px;padding-block:4px 12px}
+.icon-btn{background:none;border:0;padding:6px;border-radius:8px;display:grid;place-items:center}
+.icon-btn svg{width:22px;height:22px}
+.qhead .bar{flex:1}
+.qhead .bar i{background:var(--ok)}
+.scene{background:#3c6b3f;border-radius:12px;overflow:hidden;aspect-ratio:1/0.82;max-width:100%}
+.scene svg{width:100%;height:100%;display:block}
+.scene.plain{background:var(--asphalt-2);display:grid;place-items:center}
+.scene.plain svg{width:46%;height:auto}
+.q{font-family:var(--display);font-weight:700;font-size:25px;line-height:1.15;margin:16px 0 12px;text-wrap:balance}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--asphalt-2);border:2px solid var(--asphalt-3);border-radius:10px;padding:12px 14px;font-size:16px;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--sign-hi)}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--asphalt-2))}
+.opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 18%,var(--asphalt-2))}
+.opt:disabled{cursor:default}
+
+.feedback{margin-top:14px;display:grid;gap:10px}
+.verdict{font-family:var(--display);font-weight:800;font-size:22px;display:flex;align-items:center;gap:8px}
+.verdict.ok{color:var(--ok)} .verdict.bad{color:var(--red)}
+.tutor{display:flex;gap:10px;align-items:flex-start}
+.tutor .av{flex:none;width:36px;height:36px;border-radius:50%;background:var(--sign);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:15px;color:#fff}
+.bubble{background:var(--paint);color:#1d2024;border-radius:4px 12px 12px 12px;padding:10px 12px;font-size:15.5px;min-width:0}
+.bubble .who{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--sign);display:block;margin-bottom:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{flex:1;min-width:140px;border:0;border-radius:10px;padding:13px 16px;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;background:var(--sign);color:#fff}
+.btn.ghost{background:transparent;border:2px solid var(--asphalt-3);color:var(--paint)}
+.btn.amber{background:var(--amber);color:#1b1b1b}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* result */
+.result{display:grid;gap:16px;padding-top:24px;text-align:center}
+.result h2{font-size:40px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:var(--asphalt-2);border-radius:10px;padding:12px 6px}
+.kpi b{display:block;font-family:var(--display);font-size:32px;font-variant-numeric:tabular-nums}
+.review{text-align:left;background:var(--asphalt-2);border-radius:10px;padding:12px 14px}
+.review ul{margin:6px 0 0;padding-left:18px}
+
+/* hazard */
+.hz-wrap{position:relative;border-radius:12px;overflow:hidden;background:#2f5c33}
+.hz-wrap canvas{display:block;width:100%;height:auto;touch-action:manipulation}
+.hz-over{position:absolute;inset:0;background:rgba(20,22,26,.86);display:grid;place-items:center;padding:20px;text-align:center}
+.hz-over > div{display:grid;gap:12px;max-width:300px}
+.hz-over h3{font-size:28px}
+.hz-btn{margin-top:12px;width:100%;border:0;border-radius:12px;padding:16px;font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:.1em;background:var(--amber);color:#1b1b1b;display:flex;align-items:center;justify-content:center;gap:10px}
+.hz-btn:active{transform:scale(.98)}
+.hz-btn svg{width:30px;height:30px}
+.hz-list{display:grid;gap:10px;text-align:left}
+.hz-item{background:var(--asphalt-2);border-radius:10px;padding:12px 14px;display:grid;gap:4px}
+.hz-item .pts{font-family:var(--display);font-weight:800;font-size:20px}
+.node.sim .pin{background:var(--ok);font-size:14px}
+.sim-ctrl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.sbtn{border:2px solid var(--asphalt-3);background:var(--asphalt-2);border-radius:10px;padding:13px 8px;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;touch-action:none;user-select:none;-webkit-user-select:none}
+.sbtn.on{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 25%,var(--asphalt-2))}
+.sbtn.brake{background:color-mix(in srgb,var(--red) 30%,var(--asphalt-2));border-color:var(--red)}
+.sbtn.gas{background:color-mix(in srgb,var(--ok) 25%,var(--asphalt-2));border-color:var(--ok)}
+.sbtn.brake.on{background:var(--red)} .sbtn.gas.on{background:var(--ok)}
+.hz-item .tutor{margin-top:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const C={asphalt:"#23262b",road:"#4a4e55",paint:"#ece8dc",sign:"#1f63b8",red:"#d63d2f",amber:"#f2b634",ok:"#44a96d",grass:"#3c6b3f",grass2:"#33603a",you:"#5b9be6"};
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- state ---------- */
+const store={get(){try{return JSON.parse(localStorage.getItem("cartax")||"null")}catch(e){return null}},set(v){try{localStorage.setItem("cartax",JSON.stringify(v))}catch(e){}}};
+let S=store.get()||{xp:120,streak:3,goalMin:4,done:{}};
+const save=()=>store.set(S);
+
+/* ---------- sign & scene drawing ---------- */
+const sg={
+  tri:(inner="!")=>`<svg class="sg" viewBox="0 0 100 100"><path d="M50 8 94 88H6Z" fill="#fff" stroke="${C.red}" stroke-width="9" stroke-linejoin="round"/><text x="50" y="78" text-anchor="middle" font-family="Barlow Condensed,Arial" font-weight="800" font-size="46" fill="#111">${inner}</text></svg>`,
+  yield:()=>`<svg class="sg" viewBox="0 0 100 100"><path d="M6 12H94L50 92Z" fill="#fff" stroke="${C.red}" stroke-width="9" stroke-linejoin="round"/></svg>`,
+  stop:()=>`<svg class="sg" viewBox="0 0 100 100"><path d="M30 4H70L96 30V70L70 96H30L4 70V30Z" fill="${C.red}" stroke="#fff" stroke-width="4"/><text x="50" y="62" text-anchor="middle" font-family="Barlow Condensed,Arial" font-weight="800" font-size="32" fill="#fff">STOP</text></svg>`,
+  limit:(n)=>`<svg class="sg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="#fff" stroke="${C.red}" stroke-width="11"/><text x="50" y="64" text-anchor="middle" font-family="Barlow Condensed,Arial" font-weight="800" font-size="42" fill="#111">${n}</text></svg>`,
+  mand:()=>`<svg class="sg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${C.sign}" stroke="#fff" stroke-width="3"/><path d="M30 70V48Q30 40 38 40H62" fill="none" stroke="#fff" stroke-width="10"/><path d="M58 26 76 40 58 54Z" fill="#fff"/></svg>`,
+  round:()=>`<svg class="sg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${C.sign}" stroke="#fff" stroke-width="3"/><g fill="none" stroke="#fff" stroke-width="8"><path d="M50 22a28 28 0 0 1 26 18"/><path d="M76 60a28 28 0 0 1-26 18"/><path d="M24 60a28 28 0 0 1 0-20"/></g><path d="M70 30 84 42 68 46Z M58 82 42 80 52 68Z M18 34 30 26 30 42Z" fill="#fff"/></svg>`,
+  hazard:()=>`<svg class="sg" viewBox="0 0 100 100"><path d="M50 8 94 88H6Z" fill="${C.amber}" stroke="#1b1b1b" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="44" r="7" fill="#1b1b1b"/><path d="M50 52v22M40 80l10-6 10 6M38 60h24" stroke="#1b1b1b" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`,
+  wheel:()=>`<svg class="sg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="${C.paint}" stroke-width="10"/><circle cx="50" cy="50" r="9" fill="${C.paint}"/><path d="M14 46 41 50M86 46 59 50M50 59V88" stroke="${C.paint}" stroke-width="10" stroke-linecap="round"/></svg>`,
+  boss:()=>`<svg class="sg" viewBox="0 0 100 100"><rect x="14" y="10" width="72" height="80" rx="6" fill="#fff"/><path d="M28 32h44M28 48h44M28 64h28" stroke="#1b1b1b" stroke-width="7" stroke-linecap="round"/><circle cx="74" cy="72" r="16" fill="${C.red}"/><path d="M67 72l5 5 9-10" stroke="#fff" stroke-width="5" fill="none"/></svg>`
+};
+const car=(x,y,r,col,you)=>`<g transform="translate(${x} ${y}) rotate(${r})">${you?`<rect x="-11" y="-16" width="22" height="32" rx="6" fill="none" stroke="${C.amber}" stroke-width="2" stroke-dasharray="3 3"/>`:""}<rect x="-7" y="-12" width="14" height="24" rx="3.5" fill="${col}"/><rect x="-5.5" y="-8" width="11" height="5" rx="1.5" fill="#0d0f12" opacity=".6"/><rect x="-5.5" y="5" width="11" height="3.5" rx="1" fill="#0d0f12" opacity=".45"/></g>`;
+const youLbl=(x,y)=>`<text x="${x}" y="${y}" text-anchor="middle" font-family="Barlow Condensed,Arial" font-weight="800" font-size="11" fill="${C.amber}">TU</text>`;
+const mini=(svg,x,y,s=22)=>svg.replace('<svg class="sg"',`<svg x="${x}" y="${y}" width="${s}" height="${s}"`);
+const arrow=(d)=>`<path d="${d}" fill="none" stroke="${C.amber}" stroke-width="3" stroke-dasharray="5 4" marker-end="url(#ah)"/>`;
+const defs=`<defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="${C.amber}"/></marker></defs>`;
+function cross(extra=""){
+  return `<svg viewBox="0 0 200 164" preserveAspectRatio="xMidYMid slice">${defs}<rect width="200" height="164" fill="${C.grass}"/>
+  <rect x="70" y="0" width="60" height="164" fill="${C.road}"/><rect x="0" y="52" width="200" height="60" fill="${C.road}"/>
+  <path d="M100 0V48M100 116V164M0 82H66M134 82H200" stroke="${C.paint}" stroke-width="1.6" stroke-dasharray="7 6"/>${extra}</svg>`;
+}
+const scenes={
+  rightPrio:()=>cross(car(115,140,0,C.you,1)+youLbl(115,124)+car(170,67,-90,"#c9c3b4")),
+  yieldLeft:()=>cross(car(115,140,0,C.you,1)+youLbl(115,124)+car(30,97,90,"#c9c3b4")+mini(sg.yield(),136,118)),
+  ambulance:()=>`<svg viewBox="0 0 200 164" preserveAspectRatio="xMidYMid slice"><rect width="200" height="164" fill="${C.grass}"/><rect x="60" y="0" width="80" height="164" fill="${C.road}"/><path d="M100 0V164" stroke="${C.paint}" stroke-width="1.6" stroke-dasharray="7 6"/>${car(120,60,0,C.you,1)}${youLbl(120,42)}<g transform="translate(120 125)"><rect x="-8" y="-15" width="16" height="30" rx="3" fill="#f4f1ea"/><rect x="-6" y="-14" width="5" height="3" fill="${C.sign}"/><rect x="1" y="-14" width="5" height="3" fill="${C.red}"/><path d="M0-5v12M-6 1h12" stroke="${C.red}" stroke-width="3"/></g><circle cx="120" cy="125" r="26" fill="none" stroke="${C.sign}" stroke-width="1.5" opacity=".6"/><circle cx="120" cy="125" r="36" fill="none" stroke="${C.sign}" stroke-width="1" opacity=".35"/></svg>`,
+  zebra:()=>`<svg viewBox="0 0 200 164" preserveAspectRatio="xMidYMid slice"><rect width="200" height="164" fill="#6b6f74"/><rect x="60" y="0" width="80" height="164" fill="${C.road}"/>${[0,1,2,3,4,5,6].map(i=>`<rect x="${63+i*11}" y="58" width="7" height="30" fill="${C.paint}"/>`).join("")}<path d="M100 0V50M100 96V164" stroke="${C.paint}" stroke-width="1.6" stroke-dasharray="7 6"/>${car(120,128,0,C.you,1)}${youLbl(120,110)}<g transform="translate(86 73)"><circle r="5" fill="${C.amber}"/><circle cy="-1" r="2.6" fill="#1b1b1b"/></g><path d="M92 73h14" stroke="${C.amber}" stroke-width="2" marker-end="url(#ah)"/>${defs}</svg>`,
+  ring:(extra)=>`<svg viewBox="0 0 200 164" preserveAspectRatio="xMidYMid slice">${defs}<rect width="200" height="164" fill="${C.grass}"/><g fill="${C.road}"><rect x="80" y="0" width="40" height="164"/><rect x="0" y="62" width="200" height="40"/></g><circle cx="100" cy="82" r="58" fill="${C.road}"/><circle cx="100" cy="82" r="40" fill="none" stroke="${C.paint}" stroke-width="1.4" stroke-dasharray="6 5"/><circle cx="100" cy="82" r="22" fill="${C.grass2}" stroke="${C.paint}" stroke-width="2"/>${extra||""}</svg>`
+};
+scenes.ringEnter=()=>scenes.ring(car(110,152,0,C.you,1)+youLbl(132,156)+car(150,64,-35,"#c9c3b4")+car(62,108,150,"#8d939b")+mini(sg.yield(),124,124,18));
+scenes.ringFirst=()=>scenes.ring(car(110,150,0,C.you,1)+youLbl(132,156)+arrow("M112 132Q130 110 150 94H192")+`<text x="176" y="88" font-family="Barlow Condensed,Arial" font-weight="700" font-size="11" fill="${C.paint}">1.ª</text>`);
+scenes.ringThird=()=>scenes.ring(car(110,150,0,C.you,1)+youLbl(132,156)+arrow("M110 132Q140 112 136 74Q130 40 100 36Q72 34 62 58Q58 70 8 72")+`<text x="14" y="66" font-family="Barlow Condensed,Arial" font-weight="700" font-size="11" fill="${C.paint}">3.ª</text>`);
+const signScene=(k)=>()=>`<div class="scene plain">${k==="limit"?sg.limit(50):sg[k]()}</div>`;
+
+/* ---------- content ---------- */
+const LEVELS=[
+ {id:"prio",n:1,name:"Prioridades",desc:"Quem passa primeiro",sign:"yield",qs:[
+  {scene:"rightPrio",q:"Cruzamento sem sinais nem semáforos. Quem passa primeiro?",o:["O carro que vem da minha direita","Eu, porque vou em frente","Quem chegar primeiro ao cruzamento"],a:0,
+   why:["",
+    "Ir em frente não te dá prioridade. Sem sinalização, a regra geral é ceder a quem se apresenta pela tua direita. O outro carro está à tua direita, por isso passa ele.",
+    "Chegar primeiro não conta. Sem sinais, cedes sempre a quem vem da tua direita, mesmo que tenhas chegado antes."],
+   ex:"Pensa assim: olha para a tua direita antes de entrar. Se está lá alguém a chegar, é a vez dele. Se vier alguém da tua esquerda, és tu que passas."},
+  {scene:"yieldLeft",q:"Tens um sinal de cedência de passagem. Vem um carro da tua esquerda. O que fazes?",o:["Passo, porque ele vem da esquerda","Cedo passagem ao carro da esquerda","Buzino e avanço devagar"],a:1,
+   why:["Aqui a regra da direita não se aplica. O triângulo invertido obriga-te a ceder a todos os que circulam na outra via, venham de onde vierem.","",
+    "Buzinar não te dá prioridade. O sinal de cedência obriga-te a deixar passar quem circula na via com prioridade, incluindo pela esquerda."],
+   ex:"A sinalização manda mais do que a regra geral. Ordem a lembrar: agente de trânsito, semáforo, sinal, e só depois a regra da direita."},
+  {scene:"ambulance",q:"Uma ambulância com luzes e sirene ligadas aproxima-se por trás. O que fazes?",o:["Acelero para não a atrasar","Mantenho a marcha, a faixa é minha","Facilito a passagem, encostando à direita quando for seguro"],a:2,
+   why:["Acelerar aumenta o risco para ti e para ela. Deves facilitar a passagem, desviando-te para a direita e abrandando quando for seguro.",
+    "Veículos de emergência em marcha urgente, com sinais luminosos e sonoros, têm prioridade. Tens de lhes facilitar a passagem.",""],
+   ex:"Sinal de alerta: luzes azuis e sirene. Primeiro verifica espelhos, depois sinaliza e encosta. Nunca trava a fundo à frente dela."},
+  {scene:"zebra",q:"Um peão já começou a atravessar na passadeira. O que fazes?",o:["Paro e deixo-o atravessar","Passo atrás dele, há espaço","Buzino para ele se apressar"],a:0,
+   why:["","Mesmo com espaço, tens de deixar o peão concluir a travessia em segurança. Passar perto dele é perigoso e não é permitido.","Buzinar pode assustá-lo e causar uma queda. Deves parar e esperar que atravesse."],
+   ex:"Ao aproximares-te de uma passadeira, abranda já. Se alguém estiver a atravessar ou prestes a fazê-lo, paras antes das riscas."}
+ ]},
+ {id:"sinal",n:2,name:"Sinalização",desc:"Ler a estrada num relance",sign:"tri",qs:[
+  {scene:"sig:tri",q:"Um sinal triangular com bordo vermelho indica o quê?",o:["Proibição","Perigo à frente","Obrigação"],a:1,
+   why:["Os sinais de proibição são redondos com bordo vermelho. O triângulo avisa de um perigo que vem aí.","","Os sinais de obrigação são redondos e azuis. O triângulo com bordo vermelho é de perigo."],
+   ex:"Forma diz o tipo: triângulo = perigo, círculo vermelho = proibição, círculo azul = obrigação, quadrado azul = informação."},
+  {scene:"sig:limit",q:"O que significa este sinal?",o:["Velocidade recomendada de 50 km/h","Velocidade mínima de 50 km/h","Proibido exceder 50 km/h"],a:2,
+   why:["Uma velocidade recomendada usa um sinal quadrado. Este é redondo com bordo vermelho: é uma proibição.","A velocidade mínima é um sinal azul. Bordo vermelho significa proibição: não podes passar dos 50 km/h.",""],
+   ex:"50 km/h é também o limite geral dentro das localidades, mesmo sem sinal."},
+  {scene:"sig:mand",q:"Este sinal azul redondo obriga-te a quê?",o:["Virar à direita","Não virar à direita","Seguir a indicação de saída"],a:0,
+   why:["","Proibir viragens usa um sinal redondo com bordo vermelho e barra. Azul e redondo é sempre obrigação.","Indicações de saída são retangulares. Azul e redondo é uma ordem."],
+   ex:"Se vires azul e redondo, faz o que a seta manda. Não é sugestão."},
+  {scene:"sig:stop",q:"Chegas a um STOP e não vem ninguém. O que fazes?",o:["Abrando e passo, está livre","Paro completamente e só depois avanço","Paro só se vier alguém"],a:1,
+   why:["O STOP obriga a parar sempre, mesmo sem trânsito. Abrandar não chega.","","A paragem é obrigatória em qualquer caso. Só depois de parar verificas e avanças."],
+   ex:"Paragem completa: as rodas param mesmo. Depois olha esquerda, direita, esquerda."}
+ ]},
+ {id:"rot",n:3,name:"Rotundas",desc:"Entrar, circular e sair",sign:"round",qs:[
+  {scene:"ringEnter",q:"Vais entrar na rotunda com sinal de cedência. Quem tem prioridade?",o:["Eu, porque estou a entrar","Quem já circula na rotunda","Quem vem da minha direita fora da rotunda"],a:1,
+   why:["Quem entra cede. O sinal de cedência à entrada dá prioridade a quem já está dentro da rotunda.","","Não é a regra da direita. Aqui manda o sinal: cedes a quem já circula na rotunda."],
+   ex:"Ao chegares, olha para a esquerda (de onde vêm os carros dentro da rotunda) e entra só quando houver espaço."},
+  {scene:"ringFirst",q:"Vais sair na primeira saída. Como circulas?",o:["Pela via interior, com pisca à esquerda","Pela via da direita, com pisca à direita","Pela via interior e mudo à última hora"],a:1,
+   why:["A via interior é para quem sai mais à frente. Para a primeira saída, ficas na via da direita e sinalizas à direita.","","Mudar de via em cima da saída é perigoso. Para a primeira saída, ficas sempre na via da direita."],
+   ex:"Primeira saída = via da direita do princípio ao fim, pisca à direita desde a entrada."},
+  {scene:"ringThird",q:"Rotunda com duas vias. Vais sair na terceira saída. O que podes fazer?",o:["Ficar na via interior até à saída e sair dali","Usar a via interior e aproximar-me da direita antes de sair","Andar sempre pela via exterior em linha reta"],a:1,
+   why:["Não podes sair diretamente da via interior. Tens de passar para a via da direita antes da tua saída, sinalizando.","",
+    "Podes usar a via exterior, mas isso não é 'em linha reta': continuas a ceder e a sinalizar. A resposta mais correta é usar a interior e aproximar-te da direita antes de sair."],
+   ex:"Regra simples: sais sempre a partir da via da direita. A interior serve para circular, não para sair."},
+  {scene:"sig:round",q:"Quando ligas o pisca à direita para sair da rotunda?",o:["Assim que entro","Ao aproximar-me da saída que vou tomar","Não é preciso pisca para sair"],a:1,
+   why:["Para saídas que não sejam a primeira, o pisca à direita logo à entrada engana quem espera para entrar. Liga-o ao aproximares-te da tua saída.","","Sair sem sinalizar obriga os outros a adivinhar. O pisca à direita é obrigatório para sair."],
+   ex:"Passaste a saída anterior à tua? Pisca à direita. Assim, quem espera para entrar percebe que vais sair."}
+ ]}
+];
+
+/* ---------- views ---------- */
+const $app=document.getElementById("app");
+const flame=`<svg viewBox="0 0 24 24"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3-1-3 0-6 1-9.5Z" fill="${C.amber}"/></svg>`;
+const bolt=`<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6Z" fill="${C.you}"/></svg>`;
+const topbar=()=>`<div class="top"><div class="brand"><b>Carta</b>X</div><div class="stats"><span class="stat" title="Dias seguidos">${flame}${S.streak}</span><span class="stat" title="Pontos de experiência">${bolt}${S.xp} XP</span></div></div>`;
+
+function home(){
+  const goal=Math.min(10,S.goalMin);
+  const friends=[["Rita",1240],["Tu",S.xp],["Tomás",860],["Inês",410]].sort((a,b)=>b[1]-a[1]);
+  $app.innerHTML=topbar()+`
+  <div class="goal"><div class="goal-row"><span class="label">Meta de hoje</span><span style="font-variant-numeric:tabular-nums">${goal} de 10 min</span></div><div class="bar"><i style="width:${goal*10}%"></i></div></div>
+  <div class="path">
+   ${LEVELS.map(l=>{const d=S.done[l.id];return `<button class="node ${d!=null?"done":""}" data-l="${l.id}"><span class="pin">${d!=null?"✓":l.n}</span>${sg[l.sign]()}<span class="txt"><h3>${l.name}</h3><p>${l.desc} · ${l.qs.length} perguntas</p></span>${d!=null?`<span class="tag">${d}%</span>`:""}</button>`}).join("")}
+   <button class="node sim ${S.done.sim!=null?"done":""}" data-sim><span class="pin">${S.done.sim!=null?"✓":"3+"}</span>${sg.wheel()}<span class="txt"><h3>Ao volante: Rotunda</h3><p>Simulador · cede, escolhe a via, sinaliza</p></span>${S.done.sim!=null?`<span class="tag">${S.done.sim}%</span>`:`<span class="tag">NOVO</span>`}</button>
+   <button class="node hazard ${S.done.hz!=null?"done":""}" data-hz><span class="pin">${S.done.hz!=null?"✓":"!"}</span>${sg.hazard()}<span class="txt"><h3>Missão: Vê o perigo</h3><p>Deteta o risco antes de ele acontecer</p></span>${S.done.hz!=null?`<span class="tag">${S.done.hz} pts</span>`:`<span class="tag">NOVO</span>`}</button>
+   <button class="node boss" disabled><span class="pin">★</span>${sg.boss()}<span class="txt"><h3>Exame final</h3><p>Simulação real do exame · em breve</p></span></button>
+  </div>
+  <div class="board"><span class="label">Ranking da semana</span><ol>${friends.map((f,i)=>`<li class="${f[0]==="Tu"?"me":""}"><span class="n">${i+1}</span><span class="who">${f[0]}</span><span>${f[1]} XP</span></li>`).join("")}</ol><p class="note">Amigos de exemplo, para demonstração.</p></div>`;
+  $app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>startLevel(b.dataset.l));
+  $app.querySelector("[data-hz]").onclick=hazardIntro;
+  $app.querySelector("[data-sim]").onclick=simIntro;
+}
+
+let run;
+function startLevel(id){
+  const L=LEVELS.find(l=>l.id===id);
+  run={L,queue:L.qs.map((q,i)=>i),pos:0,first:{},xp:0,total:L.qs.length,answered:0,missed:new Set()};
+  question();
+}
+function sceneHtml(k){
+  if(k.startsWith("sig:")) return signScene(k.slice(4))();
+  return `<div class="scene">${scenes[k]()}</div>`;
+}
+function question(){
+  if(run.pos>=run.queue.length) return levelDone();
+  const qi=run.queue[run.pos],Q=run.L.qs[qi];
+  const pct=Math.round(run.answered/run.total*100);
+  const retry=run.first[qi]===false;
+  $app.innerHTML=`<div class="qhead"><button class="icon-btn" id="x" aria-label="Sair da lição"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="${C.paint}" stroke-width="2.4" stroke-linecap="round"/></svg></button><div class="bar"><i style="width:${pct}%"></i></div><span class="label">${run.L.name}</span></div>
+   ${sceneHtml(Q.scene)}
+   ${retry?`<p class="label" style="margin:14px 0 -8px;color:var(--amber)">Vamos rever esta</p>`:""}
+   <h2 class="q">${Q.q}</h2>
+   <div class="opts">${Q.o.map((t,i)=>`<button class="opt" data-i="${i}">${t}</button>`).join("")}</div>
+   <div class="feedback" id="fb"></div>`;
+  document.getElementById("x").onclick=home;
+  $app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(qi,Q,+b.dataset.i));
+}
+function typeInto(el,text){
+  if(reduce){el.textContent=text;return}
+  let i=0;el.textContent="";
+  const t=setInterval(()=>{i+=2;el.textContent=text.slice(0,i);if(i>=text.length)clearInterval(t)},18);
+}
+function answer(qi,Q,i){
+  const ok=i===Q.a;
+  $app.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;if(j===Q.a)b.classList.add("right");else if(j===i)b.classList.add("wrong")});
+  const fb=document.getElementById("fb");
+  if(run.first[qi]===undefined){run.first[qi]=ok;run.answered++;if(ok)run.xp+=10}
+  else if(ok&&!run.first[qi]) run.xp+=5;
+  if(!ok){run.missed.add(qi);if(run.first[qi]===false&&!run.queue.slice(run.pos+1).includes(qi))run.queue.push(qi)}
+  if(ok){
+    fb.innerHTML=`<div class="verdict ok">Certo! +${run.first[qi]?10:5} XP</div><div class="actions"><button class="btn" id="go">Continuar</button></div>`;
+  }else{
+    fb.innerHTML=`<div class="verdict bad">Não é bem assim</div>
+     <div class="tutor"><span class="av">IA</span><div class="bubble"><span class="who">Tutor CartaX</span><span id="tt"></span></div></div>
+     <div class="actions"><button class="btn ghost" id="more">Dá-me um exemplo</button><button class="btn" id="go">Continuar</button></div>`;
+    typeInto(document.getElementById("tt"),Q.why[i]);
+    document.getElementById("more").onclick=e=>{
+      e.target.disabled=true;
+      const d=document.createElement("div");d.className="tutor";
+      d.innerHTML=`<span class="av">IA</span><div class="bubble"><span class="who">Tutor CartaX</span><span></span></div>`;
+      fb.insertBefore(d,fb.lastElementChild);typeInto(d.querySelector(".bubble span:last-child"),Q.ex);
+    };
+  }
+  document.getElementById("go").onclick=()=>{run.pos++;question()};
+  fb.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"});
+}
+function levelDone(){
+  const right=Object.values(run.first).filter(Boolean).length;
+  const pct=Math.round(right/run.total*100);
+  S.xp+=run.xp;S.goalMin=Math.min(10,S.goalMin+3);S.done[run.L.id]=Math.max(pct,S.done[run.L.id]||0);save();
+  const topics=[...run.missed].map(i=>run.L.qs[i].q);
+  $app.innerHTML=topbar()+`<div class="result">
+   <span class="label">Lição concluída</span><h2>${run.L.name}</h2>
+   <div class="kpis"><div class="kpi"><b>${pct}%</b><span class="label">à primeira</span></div><div class="kpi"><b>+${run.xp}</b><span class="label">XP</span></div><div class="kpi"><b>${S.streak}</b><span class="label">dias seguidos</span></div></div>
+   ${topics.length?`<div class="review"><span class="label">O tutor vai voltar a estes temas amanhã</span><ul>${topics.map(t=>`<li>${t}</li>`).join("")}</ul></div>`:`<div class="review">Sem erros. O tutor sobe a dificuldade na próxima lição.</div>`}
+   <div class="actions">${run.L.id==="rot"?`<button class="btn amber" id="sim">Praticar ao volante</button>`:""}<button class="btn" id="h">Voltar ao percurso</button></div></div>`;
+  document.getElementById("h").onclick=home;
+  const sb=document.getElementById("sim");if(sb)sb.onclick=simIntro;
+}
+
+/* ---------- hazard perception mission ---------- */
+function hazardIntro(){
+  $app.innerHTML=`<div class="qhead"><button class="icon-btn" id="x" aria-label="Sair da missão"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="${C.paint}" stroke-width="2.4" stroke-linecap="round"/></svg></button><span class="label" style="flex:1">Missão: Vê o perigo</span></div>
+  <div class="hz-wrap"><canvas id="cv" width="360" height="440" aria-label="Rua vista de cima com o teu carro a circular"></canvas>
+   <div class="hz-over" id="ov"><div><h3>Vê o perigo antes de ele acontecer</h3><p>Vais circular numa rua com carros estacionados. Toca em <b>PERIGO</b> assim que vires algo que te possa obrigar a travar. Quanto mais cedo, mais pontos.</p><button class="btn amber" id="st">Começar</button></div></div></div>
+  <button class="hz-btn" id="hz" disabled>${sg.hazard().replace('class="sg"','')}PERIGO</button>`;
+  document.getElementById("x").onclick=()=>{stopHz();home()};
+  drawHz(0,[]);
+  document.getElementById("st").onclick=startHz;
+}
+let hz=null;
+const HZ=[
+ {t0:3.2,t1:6.2,name:"Carro a sair do estacionamento",tip:"Pisca ligado e rodas viradas para a estrada num carro estacionado: vai sair. Abranda e prepara-te para lhe dar espaço."},
+ {t0:8.6,t1:11.6,name:"Bola na estrada, criança atrás",tip:"Uma bola a rolar para a estrada quase sempre traz uma criança atrás. Quem a viu na bola ganhou mais um segundo para travar."}
+];
+const V=110; // px per second
+function startHz(){
+  document.getElementById("ov").hidden=true;
+  const b=document.getElementById("hz");b.disabled=false;
+  hz={t:0,last:performance.now(),taps:[],hits:[null,null],false:0,raf:0};
+  const tap=()=>{if(!hz)return;const t=hz.t;let hit=false;
+    HZ.forEach((h,i)=>{if(hz.hits[i]==null&&t>=h.t0&&t<=h.t1){const d=t-h.t0;hz.hits[i]=d<1?5:d<2?3:1;hit=true}});
+    if(!hit)hz.false++;hz.taps.push({t,ok:hit})};
+  b.onclick=tap;document.getElementById("cv").onclick=tap;
+  const loop=now=>{if(!hz)return;hz.t+=Math.min(.05,(now-hz.last)/1000);hz.last=now;drawHz(hz.t,hz.taps);if(hz.t>=13.5)return endHz();hz.raf=requestAnimationFrame(loop)};
+  hz.raf=requestAnimationFrame(loop);
+}
+function stopHz(){if(hz){cancelAnimationFrame(hz.raf);hz=null}}
+function rr(c,x,y,w,h,r){c.beginPath();c.roundRect?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h);c.fill()}
+function drawCar(c,x,y,col,ang=0,blink=false){
+  c.save();c.translate(x,y);c.rotate(ang);c.fillStyle=col;rr(c,-13,-22,26,44,6);
+  c.fillStyle="rgba(10,12,15,.6)";rr(c,-10,-14,20,9,2);c.fillStyle="rgba(10,12,15,.45)";rr(c,-10,10,20,6,2);
+  if(blink){c.fillStyle=C.amber;c.beginPath();c.arc(-11,-19,4,0,7);c.arc(-11,19,4,0,7);c.fill()}
+  c.restore();
+}
+function drawHz(t,taps){
+  const cv=document.getElementById("cv");if(!cv)return;const c=cv.getContext("2d");const W=360,H=440;
+  const s=t*V; // scroll
+  c.fillStyle="#7c7f84";c.fillRect(0,0,W,H); // pavement
+  c.fillStyle=C.road;c.fillRect(70,0,220,H);
+  c.fillStyle="#5a5e64";c.fillRect(66,0,4,H);c.fillRect(290,0,4,H);
+  // lane dashes
+  c.fillStyle=C.paint;for(let y=-40+(s%40);y<H;y+=40)c.fillRect(178,y,4,22);
+  // trees on both sidewalks
+  for(let k=0;k<12;k++){const y=((k*95+s)%(H+120))-60;c.fillStyle="#2f5c33";c.beginPath();c.arc(30,y,20,0,7);c.arc(330,y+40,20,0,7);c.fill()}
+  // parked cars, right curb (x=268). world positions in screen at t: y = base + s
+  const parked=[[40,"#8d939b"],[-30,"#a35b4a"],[-160,"#c9c3b4"],[-235,"#6f7f95"],[-700,"#8d939b"],[-770,"#c9c3b4"],[-910,"#a35b4a"],[-980,"#6f7f95"]];
+  parked.forEach(([b,col])=>{const y=b+s;if(y>-60&&y<H+60)drawCar(c,266,y,col)});
+  // hazard 1: car parked at base -420 that pulls out from t0
+  const h1=HZ[0];let x1=266,y1=-440+s,ang=0;
+  if(t>h1.t0){const p=Math.min(1,(t-h1.t0)/2.2);x1=266-p*36;ang=-0.35*Math.sin(p*Math.PI);if(t>h1.t0+2.2){y1-=(t-h1.t0-2.2)*150}}
+  if(y1>-60&&y1<H+60)drawCar(c,x1,y1,"#d9d3c3",ang,t>h1.t0-1.2&&Math.floor(t*3)%2===0);
+  // hazard 2: ball then child between parked cars at base -840
+  const h2=HZ[1],by=-840+s;
+  if(t>h2.t0){const bx=300-(t-h2.t0)*70;c.fillStyle=C.red;c.beginPath();c.arc(Math.max(110,bx),by,7,0,7);c.fill();c.fillStyle="#fff";c.fillRect(Math.max(110,bx)-7,by-1.5,14,3)}
+  if(t>h2.t0+1.1){const cx=312-Math.min(60,(t-h2.t0-1.1)*45);c.fillStyle=C.amber;c.beginPath();c.arc(cx,by+4,9,0,7);c.fill();c.fillStyle="#1b1b1b";c.beginPath();c.arc(cx,by+2,5,0,7);c.fill()}
+  // you
+  drawCar(c,232,360,C.you);
+  c.font="800 13px Barlow Condensed, Arial";c.fillStyle=C.amber;c.textAlign="center";c.fillText("TU",232,400);
+  // tap flashes
+  taps.forEach(tp=>{const a=1-(t-tp.t)/0.8;if(a>0){c.globalAlpha=a;c.strokeStyle=tp.ok?C.ok:C.red;c.lineWidth=6;c.strokeRect(3,3,W-6,H-6);c.globalAlpha=1}});
+  // timer
+  c.fillStyle="rgba(20,22,26,.7)";rr(c,10,10,64,26,6);c.fillStyle=C.paint;c.font="700 16px Barlow Condensed, Arial";c.textAlign="left";c.fillText(Math.max(0,13.5-t).toFixed(1)+" s",20,29);
+}
+function endHz(){
+  const r=hz;stopHz();
+  const pts=r.hits.reduce((a,b)=>a+(b||0),0);
+  S.xp+=pts*4;S.done.hz=Math.max(pts,S.done.hz||0);S.goalMin=Math.min(10,S.goalMin+2);save();
+  const lab=p=>p==null?"Não detetado":p===5?"Excelente, viste cedo":p===3?"A tempo":"Muito em cima";
+  $app.innerHTML=topbar()+`<div class="result"><span class="label">Missão concluída</span><h2>${pts} de 10 pontos</h2>
+   <div class="hz-list">${HZ.map((h,i)=>`<div class="hz-item"><span class="pts" style="color:${r.hits[i]==null?C.red:r.hits[i]===5?C.ok:C.amber}">${lab(r.hits[i])} · ${r.hits[i]||0} pts</span><b>${h.name}</b><span>${h.tip}</span></div>`).join("")}
+   ${r.false?`<div class="hz-item"><b>${r.false} ${r.false===1?"toque fora de tempo":"toques fora de tempo"}</b><span>Tocar sem haver perigo não dá pontos. No exame real de perceção de risco, toques a mais podem anular a resposta.</span></div>`:""}</div>
+   <div class="actions"><button class="btn ghost" id="again">Repetir</button><button class="btn" id="h">Voltar ao percurso</button></div></div>`;
+  document.getElementById("h").onclick=home;document.getElementById("again").onclick=hazardIntro;
+}
+
+/* ---------- driving simulator: roundabout ---------- */
+const SW=360,SH=460,CX=180,CY=190,R_OUT=108,R_IN=80;
+const D2R=Math.PI/180;
+const SIM_TIPS={
+ yield:["Cedeste a passagem à entrada","À entrada da rotunda cedes a quem já circula nela. Trava antes da linha, olha para a esquerda e entra só quando houver espaço."],
+ laneFirst:["Via certa para a tua saída","Para a 1.ª saída ficas sempre na via da direita. A via interior é para quem sai mais à frente."],
+ missed:["Saíste na saída certa","Não podes sair a partir da via interior. Depois de passares a saída anterior à tua, liga o pisca à direita e passa para a via exterior a tempo."],
+ laneSig:["Mudanças de via sinalizadas","Cada mudança de via dentro da rotunda tem de ser sinalizada: pisca à esquerda para ir para dentro, pisca à direita para vir para fora."],
+ exitSig:["Pisca à direita para sair","Para sair, liga o pisca à direita. Quem espera para entrar precisa de saber que vais sair."],
+ early:["Pisca no momento certo","Ligaste o pisca à direita antes de passares a saída anterior à tua. Quem espera para entrar pode pensar que vais sair ali e avançar. Liga-o só depois de passares essa saída."],
+ speed:["Velocidade até 30 km/h","Na rotunda circula devagar, até 30 km/h. As curvas são apertadas e há carros a entrar e a sair."]
+};
+let sim=null;
+const btnHold=(id,key)=>{const b=document.getElementById(id);const on=e=>{e.preventDefault();if(sim)sim[key]=true;b.classList.add("on")},off=()=>{if(sim)sim[key]=false;b.classList.remove("on")};
+  b.addEventListener("pointerdown",on);["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,off))};
+function simIntro(){
+  $app.innerHTML=`<div class="qhead"><button class="icon-btn" id="x" aria-label="Sair do simulador"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="${C.paint}" stroke-width="2.4" stroke-linecap="round"/></svg></button><span class="label" style="flex:1">Ao volante: Rotunda</span><span class="label" id="kmh" style="color:var(--paint)">0 km/h</span></div>
+  <div class="hz-wrap"><canvas id="sc" width="${SW}" height="${SH}" aria-label="Rotunda vista de cima com o teu carro"></canvas>
+   <div class="hz-over" id="ov"><div><h3>Conduz tu a rotunda</h3><p>O carro anda sozinho. Tu travas, aceleras, escolhes a via e ligas o pisca. O tutor avalia cada decisão.</p><span class="label">Escolhe a missão</span><div class="actions"><button class="btn amber" data-k="1">1.ª saída</button><button class="btn amber" data-k="3">3.ª saída</button></div></div></div></div>
+  <div class="sim-ctrl">
+   <button class="sbtn" id="bl" aria-pressed="false">◀ Pisca</button><button class="sbtn" id="br" aria-pressed="false">Pisca ▶</button>
+   <button class="sbtn" id="li">Via interior</button><button class="sbtn" id="lo">Via exterior</button>
+   <button class="sbtn brake" id="bk">Travar</button><button class="sbtn gas" id="gs">Acelerar</button>
+  </div>`;
+  document.getElementById("x").onclick=()=>{stopSim();home()};
+  $app.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>startSim(+b.dataset.k));
+  sim={k:3,phase:"idle",t:0,x:CX+15,y:SH+60,v:0,blink:null,lane:"out",r:R_OUT,th:0,errs:new Set(),ai:[],msg:""};
+  drawSim();
+}
+function startSim(k){
+  document.getElementById("ov").hidden=true;
+  const exitAng=-90+90*k;
+  sim={k,exitAng,phase:"approach",t:0,last:performance.now(),x:CX+15,y:SH+70,v:70,blink:null,lane:"out",r:R_OUT,th:-78,blend:0,errs:new Set(),brake:false,gas:false,
+    signalAtChange:true,changing:false,rightOnAt:null,passedPrev:false,laps:0,
+    ai:[{th:-150,lane:R_OUT,w:0,col:"#c9c3b4"},{th:30,lane:R_OUT,w:0,col:"#a35b4a"},{th:160,lane:R_IN,w:0,col:"#6f7f95"}],
+    msg:k===1?"Missão: sai na 1.ª saída":"Missão: sai na 3.ª saída",flash:0,flashCol:C.red,raf:0};
+  const set=(side)=>{sim.blink=sim.blink===side?null:side;
+    if(sim.blink==="R"&&sim.phase==="ring"&&!sim.passedPrev&&sim.k>1)flag("early");
+    updBlink()};
+  document.getElementById("bl").onclick=()=>set("L");
+  document.getElementById("br").onclick=()=>set("R");
+  document.getElementById("li").onclick=()=>changeLane("in");
+  document.getElementById("lo").onclick=()=>changeLane("out");
+  btnHold("bk","brake");btnHold("gs","gas");
+  updBlink();
+  const loop=now=>{if(!sim||sim.phase==="done")return;const dt=Math.min(.05,(now-sim.last)/1000);sim.last=now;stepSim(dt);drawSim();sim.raf=requestAnimationFrame(loop)};
+  sim.raf=requestAnimationFrame(loop);
+}
+function stopSim(){if(sim){cancelAnimationFrame(sim.raf);sim=null}}
+function updBlink(){["bl","br"].forEach(id=>{const b=document.getElementById(id);if(!b)return;const on=sim&&sim.blink===(id==="bl"?"L":"R");b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)})}
+function flag(id){if(!sim.errs.has(id)){sim.errs.add(id);sim.flash=1;sim.flashCol=C.red;sim.msg=SIM_TIPS[id][1].split(". ")[0]+"."}}
+function changeLane(to){
+  if(!sim||sim.lane===to||sim.phase==="exit")return;
+  if(sim.phase==="ring"&&sim.blend>=1){
+    const need=to==="in"?"L":"R";
+    if(sim.blink!==need)flag("laneSig");
+  }
+  if(to==="in"&&sim.k===1)flag("laneFirst");
+  sim.lane=to;
+}
+const norm=a=>{a=((a%360)+540)%360-180;return a};
+function stepSim(dt){
+  const s=sim;s.t+=dt;s.flash=Math.max(0,s.flash-dt*1.2);
+  const target=s.brake?0:s.gas?180:(s.phase==="approach"?70:100);
+  const rate=s.brake?220:120;
+  s.v+=Math.max(-rate*dt,Math.min(rate*dt,target-s.v));
+  const kmh=Math.round(s.v/4);const el=document.getElementById("kmh");if(el)el.textContent=kmh+" km/h";
+  // AI cars circulate counterclockwise and slow behind you
+  s.ai.forEach(a=>{let w=95/a.lane*(180/Math.PI);
+    if(s.phase==="ring"){const gap=norm(s.th-a.th);if(Math.abs(a.lane-s.r)<15&&gap>0&&gap<28)w=Math.min(w,s.v/s.r*(180/Math.PI))}
+    a.th=norm(a.th+w*dt)});
+  if(s.phase==="approach"){
+    s.y-=s.v*dt;
+    if(s.y<CY+R_OUT+42&&s.y>CY+R_OUT+18&&s.v>5)s.msg="Cede a quem circula: olha para a esquerda";
+    if(s.y<=CY+R_OUT+20){
+      const conflict=s.ai.some(a=>{const d=norm(-78-a.th);return a.lane===R_OUT?(d>-12&&d<70):(d>-5&&d<30)});
+      if(conflict)flag("yield");else if(!s.errs.has("yield")){s.flash=1;s.flashCol=C.ok;s.msg="Boa entrada. "+(s.k===1?"Mantém-te na via exterior.":"Podes usar a via interior.")}
+      s.phase="ring";s.th=-78;s.blend=0;s.bx=s.x;s.by=s.y;if(s.k>1&&s.blink==="R")flag("early");
+    }
+  }else if(s.phase==="ring"){
+    const tr=s.lane==="in"?R_IN:R_OUT;s.r+=Math.max(-45*dt,Math.min(45*dt,tr-s.r));
+    if(Math.abs(tr-s.r)<.5&&s.lane==="in"&&s.blink==="L")s.blink=null,updBlink();
+    s.th+=s.v/s.r*(180/Math.PI)*dt;s.blend=Math.min(1,s.blend+dt*2.2);
+    if(s.v>121)flag("speed");
+    const prev=s.exitAng-90;
+    if(s.k>1&&!s.passedPrev&&s.th>=prev+8){s.passedPrev=true;if(!s.errs.has("missed"))s.msg="Passaste a saída anterior: pisca à direita e via exterior"}
+    if(s.th>=s.exitAng-10){
+      if(s.r>R_OUT-6){
+        if(s.blink!=="R")flag("exitSig");
+        s.phase="exit";s.ex=s.x;s.ey=s.y;s.blend=0;s.msg="A sair…";
+      }else{
+        flag("missed");s.th-=360;s.passedPrev=false;s.laps++;
+        if(s.laps>1){const q=simPos();s.ex=q.x;s.ey=q.y;s.phase="exit";s.blend=0;}
+      }
+    }
+  }else if(s.phase==="exit"){
+    s.blend=Math.min(1,s.blend+dt*2);
+    s.dist=(s.dist||0)+s.v*dt;
+    if(s.dist>230)return endSim();
+  }
+}
+function simPos(){
+  const s=sim;
+  if(s.phase==="approach"||s.phase==="idle")return{x:s.x,y:s.y,a:0};
+  if(s.phase==="ring"){
+    const t=s.th*D2R,x=CX+s.r*Math.cos(t),y=CY-s.r*Math.sin(t),a=Math.atan2(-Math.sin(t),Math.cos(t));
+    const dx=-Math.sin(t),dy=-Math.cos(t),ang=Math.atan2(dx,-dy);
+    if(s.blend<1){const b=s.blend;return{x:s.bx+(x-s.bx)*b,y:s.by+(y-s.by)*b,a:ang*b}}
+    return{x,y,a:ang};
+  }
+  const f=s.exitAng*D2R,ux=Math.cos(f),uy=-Math.sin(f),rx=Math.sin(f),ry=Math.cos(f);
+  const px=CX+ux*(R_OUT+10+(s.dist||0))+rx*15,py=CY+uy*(R_OUT+10+(s.dist||0))+ry*15;
+  const ang=Math.atan2(ux,-uy);
+  if(s.blend<1){const b=s.blend;return{x:s.ex+(px-s.ex)*b,y:s.ey+(py-s.ey)*b,a:ang}}
+  return{x:px,y:py,a:ang};
+}
+function drawSim(){
+  const cv=document.getElementById("sc");if(!cv||!sim)return;const c=cv.getContext("2d");
+  c.fillStyle=C.grass;c.fillRect(0,0,SW,SH);
+  c.fillStyle=C.road;c.fillRect(CX-30,0,60,SH);c.fillRect(0,CY-30,SW,60);
+  c.beginPath();c.arc(CX,CY,R_OUT+16,0,7);c.fill();
+  // arm markings, drawn for the south arm then rotated
+  for(let k=0;k<4;k++){c.save();c.translate(CX,CY);c.rotate(k*Math.PI/2);
+    c.strokeStyle=C.paint;c.lineWidth=2;c.setLineDash([8,7]);c.beginPath();c.moveTo(0,R_OUT+18);c.lineTo(0,SH);c.stroke();
+    c.setLineDash([5,4]);c.lineWidth=3;c.beginPath();c.moveTo(1,R_OUT+20);c.lineTo(29,R_OUT+20);c.stroke();
+    c.setLineDash([]);c.fillStyle=C.paint;for(let i=0;i<3;i++){const x=5+i*9;c.beginPath();c.moveTo(x,R_OUT+27);c.lineTo(x+7,R_OUT+27);c.lineTo(x+3.5,R_OUT+35);c.fill()}
+    c.restore()}
+  c.setLineDash([7,6]);c.strokeStyle=C.paint;c.lineWidth=1.6;c.beginPath();c.arc(CX,CY,(R_OUT+R_IN)/2,0,7);c.stroke();c.setLineDash([]);
+  c.fillStyle="#33603a";c.beginPath();c.arc(CX,CY,R_IN-16,0,7);c.fill();c.strokeStyle=C.paint;c.lineWidth=3;c.stroke();
+  // exit numbers
+  [1,2,3].forEach(k=>{const f=(-90+90*k)*D2R,x=CX+Math.cos(f)*(R_OUT+48)+Math.sin(f)*15,y=CY-Math.sin(f)*(R_OUT+48)+Math.cos(f)*15;
+    const tgt=sim.k===k&&sim.phase!=="idle";c.fillStyle=tgt?C.amber:"rgba(20,22,26,.75)";c.beginPath();c.arc(x,y,12,0,7);c.fill();
+    c.fillStyle=tgt?"#1b1b1b":C.paint;c.font="800 15px Barlow Condensed, Arial";c.textAlign="center";c.textBaseline="middle";c.fillText(k+".ª",x,y+1)});
+  // AI cars
+  sim.ai.forEach(a=>{const t=a.th*D2R,x=CX+a.lane*Math.cos(t),y=CY-a.lane*Math.sin(t);drawCar(c,x,y,a.col,Math.atan2(-Math.sin(t),Math.cos(t)))});
+  // you
+  const p=simPos();
+  c.save();c.translate(p.x,p.y);c.rotate(p.a);c.fillStyle=C.you;rr(c,-13,-22,26,44,6);
+  c.fillStyle="rgba(10,12,15,.6)";rr(c,-10,-14,20,9,2);c.fillStyle="rgba(10,12,15,.45)";rr(c,-10,10,20,6,2);
+  if(sim.blink&&Math.floor(sim.t*3)%2===0){const sx=sim.blink==="L"?-11:11;c.fillStyle=C.amber;c.beginPath();c.arc(sx,-19,4.5,0,7);c.arc(sx,19,4.5,0,7);c.fill()}
+  if(sim.brake&&sim.v>1){c.fillStyle=C.red;c.fillRect(-11,19,6,3);c.fillRect(5,19,6,3)}
+  c.restore();
+  // message banner
+  if(sim.msg){c.font="700 15px Atkinson Hyperlegible, system-ui";c.textAlign="center";c.textBaseline="middle";const w=Math.min(SW-20,c.measureText(sim.msg).width+24);
+    c.fillStyle="rgba(20,22,26,.85)";rr(c,(SW-w)/2,10,w,32,8);c.fillStyle=C.paint;c.fillText(sim.msg,SW/2,27,SW-36)}
+  if(sim.flash>0){c.globalAlpha=sim.flash;c.strokeStyle=sim.flashCol;c.lineWidth=8;c.strokeRect(4,4,SW-8,SH-8);c.globalAlpha=1}
+}
+function endSim(){
+  const s=sim;s.phase="done";cancelAnimationFrame(s.raf);
+  const checks=["yield",s.k===1?"laneFirst":null,s.k>1?"missed":null,"laneSig","exitSig",s.k>1?"early":null,"speed"].filter(Boolean);
+  const ok=checks.filter(id=>!s.errs.has(id)).length;
+  S.xp+=ok*5;S.done.sim=Math.max(ok*100/checks.length|0,S.done.sim||0);S.goalMin=Math.min(10,S.goalMin+2);save();
+  const k=s.k;sim=null;
+  $app.innerHTML=topbar()+`<div class="result"><span class="label">Ao volante · ${k}.ª saída</span><h2>${ok} de ${checks.length} decisões certas</h2>
+   <div class="hz-list">${checks.map(id=>{const bad=s.errs.has(id);return `<div class="hz-item"><span class="pts" style="color:${bad?C.red:C.ok}">${bad?"✗":"✓"} ${SIM_TIPS[id][0]}</span>${bad?`<div class="tutor"><span class="av">IA</span><div class="bubble"><span class="who">Tutor CartaX</span>${SIM_TIPS[id][1]}</div></div>`:""}</div>`}).join("")}</div>
+   <div class="actions"><button class="btn ghost" id="again">${k===1?"Tentar a 3.ª saída":"Tentar a 1.ª saída"}</button><button class="btn" id="h">Voltar ao percurso</button></div></div>`;
+  document.getElementById("h").onclick=home;
+  document.getElementById("again").onclick=()=>{simIntro();startSim(k===1?3:1)};
+}
+
+home();
+</script>
+</body>
+</html>
