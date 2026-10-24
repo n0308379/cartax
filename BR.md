@@ -4,7 +4,7 @@ Oct 24, 2026 · @Eunice Lee
 
 ## Objetivo e âmbito
 
-A versão 1.0 da CartaX tem 26 regras **Must**: lições curtas, tutor que explica cada erro, simulador 2D e treino de perceção de perigo, com conteúdo validado por um instrutor antes de chegar aos alunos. As restantes regras ficam para versões seguintes ou fora de âmbito.
+A versão 1.0 da CartaX tem 32 regras **Must**: lições curtas, tutor que explica cada erro, simulador 2D e treino de perceção de perigo, um backoffice para as escolas de condução parceiras e conteúdo validado por um instrutor antes de chegar aos alunos. As restantes regras ficam para versões seguintes ou fora de âmbito.
 
 A CartaX é uma app para alunos de condução em Portugal. O objetivo é preparar para a estrada, e não só para o exame teórico do IMT. Este documento define as regras de negócio do produto, com base no protótipo publicado em [cartax.skyxlee.com](https://cartax.skyxlee.com), e prioriza-as para a primeira versão comercial.
 
@@ -117,18 +117,41 @@ Muitos alunos têm 17 ou 18 anos, por isso a app recolhe o mínimo de dados e cu
 | BR-44 | O progresso fica guardado na conta e sincroniza entre dispositivos. | Should | Não (só no browser) |
 | BR-45 | Os dados só são partilhados com uma escola de condução parceira se o aluno der consentimento explícito. | Should | Não |
 
+## Backoffice e integração com escolas de condução
+
+Cada escola parceira acompanha os seus alunos e valida conteúdo num backoffice próprio, mas só vê os dados de alunos que aceitaram a associação.
+
+| ID | Regra | MoSCoW | Protótipo |
+| --- | --- | --- | --- |
+| BR-46 | Cada escola parceira tem uma conta no backoffice com dois perfis: administrador da escola (gere instrutores e alunos) e instrutor (acompanha alunos). | Must | Não |
+| BR-47 | A escola convida o aluno por código ou link. A associação só fica ativa depois de o aluno a aceitar na app (consentimento, ver BR-45). | Must | Não |
+| BR-48 | O instrutor só vê os alunos associados à sua escola: níveis concluídos, % de acerto, temas fracos e resultados do simulador e da perceção de perigo. | Must | Não |
+| BR-49 | O aluno pode desassociar-se da escola a qualquer momento. A partir daí, a escola deixa de ver os dados dele. | Must | Não |
+| BR-50 | O conteúdo passa pelos estados Rascunho, Em revisão, Aprovado ou Rejeitado. Só um instrutor certificado aprova, e só o conteúdo aprovado é publicado (aplica BR-35). | Must | Não |
+| BR-51 | O backoffice regista quem criou, reviu e publicou cada conteúdo, e quem consultou dados de cada aluno, com data e hora. | Must | Não |
+| BR-52 | O instrutor atribui lições ou missões a um aluno ou a uma turma, com prazo, e vê quem as concluiu. | Should | Não |
+| BR-53 | Cada aluno tem um indicador de prontidão para o exame, calculado a partir do Exame final simulado (BR-09). O critério é definido com as escolas. | Should | Não |
+| BR-54 | A escola pode criar conteúdo próprio, visível só para os seus alunos, sujeito ao mesmo fluxo de validação (BR-50). | Should | Não |
+| BR-55 | O backoffice mostra o número de alunos ativos por mês, que é a base de faturação da licença da escola. | Should | Não |
+| BR-56 | O instrutor exporta relatórios de progresso por aluno ou turma, em CSV ou PDF. | Should | Não |
+| BR-57 | A CartaX integra por API com o software de gestão da escola, para sincronizar a lista de alunos. | Could | Não |
+| BR-58 | A escola pode personalizar a app para os seus alunos, com o logótipo e as cores dela. | Could | Não |
+| BR-59 | Instrutor e aluno trocam mensagens dentro da app. | Could | Não |
+| BR-60 | A marcação de aulas práticas e de exames é feita no backoffice da CartaX. | Won't | Não (fica no software da escola) |
+| BR-61 | A CartaX comunica diretamente com os sistemas do IMT. | Won't | Não |
+
 ## Resumo MoSCoW
 
-Das 45 regras, 26 são Must. Destas, 9 ainda faltam ou estão só em parte no protótipo, quase todas sobre validação de conteúdo, contas e RGPD.
+Das 61 regras, 32 são Must. Destas, 15 ainda faltam ou estão só em parte no protótipo, quase todas sobre validação de conteúdo, contas, RGPD e o backoffice das escolas.
 
 | Prioridade | N.º | Regras |
 | --- | --- | --- |
-| Must | 26 | BR-01 a BR-06, BR-11 a BR-14, BR-17 a BR-20, BR-24, BR-25, BR-29, BR-30, BR-35 a BR-38, BR-40 a BR-43 |
-| Should | 10 | BR-07, BR-08, BR-09, BR-15, BR-21, BR-26, BR-31, BR-39, BR-44, BR-45 |
-| Could | 5 | BR-10, BR-16, BR-27, BR-32, BR-33 |
-| Won't | 4 | BR-22, BR-23, BR-28, BR-34 |
+| Must | 32 | BR-01 a BR-06, BR-11 a BR-14, BR-17 a BR-20, BR-24, BR-25, BR-29, BR-30, BR-35 a BR-38, BR-40 a BR-43, BR-46 a BR-51 |
+| Should | 15 | BR-07, BR-08, BR-09, BR-15, BR-21, BR-26, BR-31, BR-39, BR-44, BR-45, BR-52 a BR-56 |
+| Could | 8 | BR-10, BR-16, BR-27, BR-32, BR-33, BR-57 a BR-59 |
+| Won't | 6 | BR-22, BR-23, BR-28, BR-34, BR-60, BR-61 |
 
-**Musts em falta para a v1.0:** BR-14 (tutor com IA sobre base validada), BR-20 (limites de velocidade validados), BR-30 (dias seguidos reais), BR-35 e BR-36 (validação e atualização do conteúdo), BR-38 (aviso de complemento à escola), BR-40, BR-42 e BR-43 (contas e RGPD, ranking privado, exportar e apagar dados).
+**Musts em falta para a v1.0:** BR-14 (tutor com IA sobre base validada), BR-20 (limites de velocidade validados), BR-30 (dias seguidos reais), BR-35 e BR-36 (validação e atualização do conteúdo), BR-38 (aviso de complemento à escola), BR-40, BR-42 e BR-43 (contas e RGPD, ranking privado, exportar e apagar dados), BR-46 a BR-51 (backoffice das escolas: contas, associação de alunos, acompanhamento, validação de conteúdo e auditoria).
 
 ## Pressupostos e questões em aberto
 
