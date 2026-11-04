@@ -25,6 +25,15 @@ O progresso fica guardado no browser de cada pessoa.
 
 **Modo vídeo:** abre `cartax.skyxlee.com/#video` (ou toca em "Modo vídeo · 1 minuto" no fim do percurso). A app faz sozinha uma demonstração de 60 segundos, com legendas, pronta a gravar o ecrã de uma só vez.
 
+## Desenhador de cenas
+
+Em [`/cenas`](https://cartax.skyxlee.com/cenas/) está a primeira versão do desenhador de ilustrações. Recebe uma descrição da cena em JSON (proposta pela IA a partir da pergunta) e desenha-a por código, vista de cima, com 20 variantes que só mudam o que não altera a resposta.
+
+- `cenas/desenhador.js`: o desenhador (peças de estrada, veículos, estados e validação).
+- `cenas/index.html`: o ecrã de teste do instrutor, com três exemplos.
+
+Peças disponíveis: entrada de autoestrada. As outras entram à medida que as perguntas-piloto as pedirem.
+
 ## Limitações do protótipo
 
 - As explicações do tutor estão escritas à mão. Na versão final, viriam de um modelo de IA treinado com o Código da Estrada.

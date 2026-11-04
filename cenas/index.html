@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CartaX · Desenhador de cenas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#f3f2ee; --card:#ffffff; --ink:#1f2328; --muted:#5f666e; --line:#d9d7d0;
+  --sign:#1f63b8; --amber:#e8a400; --red:#c8372b; --ok:#2f8a57;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body)}
+.wrap{max-width:1180px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left)) 40px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.brand{font:800 28px var(--display);letter-spacing:.02em}
+.brand b{background:var(--sign);color:#fff;padding:0 6px;border-radius:4px;margin-right:2px}
+header .sub{font:600 18px var(--display);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+header .ver{margin-left:auto;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px}
+.label{font:700 13px var(--display);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+select,textarea,button{font:inherit}
+select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.q{font:700 21px/1.2 var(--display);margin:0}
+.opts{margin:0;padding-left:18px;color:var(--muted)}
+.opts .ok{color:var(--ok);font-weight:700}
+textarea{width:100%;min-height:300px;padding:10px;border:1px solid var(--line);border-radius:8px;font:13px/1.45 var(--mono);resize:vertical;background:#fbfbf9}
+textarea:focus,select:focus,button:focus-visible{outline:3px solid #9cc0f0;outline-offset:1px}
+.msgs{display:grid;gap:6px}
+.msg{padding:8px 10px;border-radius:8px;font-size:14px}
+.msg.err{background:#fbebeb;color:#8a1f17}
+.msg.warn{background:#fff3d6;color:#7a5500}
+.msg.ok{background:#e5f4e4;color:#1e5e39}
+.crit{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.crit li{display:flex;gap:8px;align-items:flex-start}
+.crit input{margin-top:3px}
+.stage{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:8px;padding:10px 14px;background:var(--sign);color:#fff;font:700 16px var(--display);letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.note{color:var(--muted);font-size:13px;margin:0}
+.variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:6px}
+.variant{background:#fff;border:2px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;padding:0;text-align:left}
+.variant svg{display:block;width:100%;height:auto}
+.variant span{display:block;padding:4px 8px;font-size:12px;color:var(--muted)}
+.variant[aria-pressed="true"]{border-color:var(--sign)}
+h2{font:700 20px var(--display);margin:22px 0 4px}
+code{font-family:var(--mono);font-size:13px;background:#ecebe6;padding:1px 4px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><b>Carta</b>X</div>
+    <div class="sub">Desenhador de cenas</div>
+    <div class="ver" id="ver"></div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <div>
+        <div class="label">Exemplo</div>
+        <select id="preset" aria-label="Escolher exemplo"></select>
+      </div>
+      <div>
+        <div class="label">Pergunta</div>
+        <p class="q" id="enunciado"></p>
+        <ol class="opts" id="opcoes"></ol>
+      </div>
+      <div>
+        <div class="label">Descrição da cena (proposta pela IA, editável)</div>
+        <textarea id="json" spellcheck="false" aria-label="Descrição da cena em JSON"></textarea>
+      </div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div>
+        <div class="label">Elementos críticos (o revisor confirma)</div>
+        <ul class="crit" id="crit"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage" id="stage" aria-label="Ilustração da cena"></div>
+      <div class="bar">
+        <button class="btn" id="gerar">Gerar 20 variantes</button>
+        <button class="btn ghost" id="png">Descarregar PNG</button>
+        <span class="note" id="amb"></span>
+      </div>
+      <p class="note">As variantes só mudam o que não altera a resposta: cores e modelos dos carros, hora do dia, piso molhado e vegetação. A estrada, os lugares e os estados vêm sempre da descrição.</p>
+    </div>
+  </div>
+
+  <h2 id="vh" hidden>Variantes</h2>
+  <div class="variants" id="variants"></div>
+
+  <h2>Peças e lugares disponíveis</h2>
+  <p class="note" id="pecas"></p>
+</div>
+
+<script src="desenhador.js"></script>
+<script>
+const C = window.CartaXCenas;
+document.getElementById("ver").textContent = "desenhador v" + C.versao;
+
+const PRESETS = [
+  {
+    nome: "Ambulância em marcha de urgência, carro ao lado",
+    enunciado: "A ambulância, com luzes e sirene ligadas, deve ceder a passagem ao entrar na autoestrada?",
+    opcoes: [["Sim, como qualquer veículo que entra na autoestrada", false], ["Não, em marcha de urgência são os outros que lhe facilitam a passagem", true]],
+    cena: {
+      peca: "entrada_autoestrada",
+      elementos: [
+        { id: "amb", tipo: "ambulancia", lugar: "via_aceleracao", avanco: 0.5, estado: { emergencia: true } },
+        { id: "carro", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "amb", posicao: "ao_lado" }
+      ],
+      elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência acesas", "ligeiro na faixa da direita, ao lado da ambulância"],
+      avisos: []
+    }
+  },
+  {
+    nome: "Ambulância sem urgência, carro atrás",
+    enunciado: "A ambulância, sem luzes nem sirene, vai entrar na autoestrada. Quem tem prioridade?",
+    opcoes: [["A ambulância, por ser um veículo de socorro", false], ["O ligeiro, que já circula na autoestrada", true]],
+    cena: {
+      peca: "entrada_autoestrada",
+      elementos: [
+        { id: "amb", tipo: "ambulancia", lugar: "via_aceleracao", avanco: 0.6, estado: { emergencia: false, pisca: "esquerdo" } },
+        { id: "carro", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "amb", posicao: "atras" }
+      ],
+      elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência apagadas", "ligeiro na faixa da direita, atrás da ambulância"],
+      avisos: []
+    }
+  },
+  {
+    nome: "Pesado no ramal, ligeiro na faixa da direita",
+    enunciado: "O pesado está no ramal de entrada. O que deve fazer o condutor do ligeiro?",
+    opcoes: [["Travar a fundo para o deixar entrar", false], ["Manter a marcha e, se for seguro, facilitar a entrada mudando de faixa", true]],
+    cena: {
+      peca: "entrada_autoestrada",
+      elementos: [
+        { id: "camiao", tipo: "pesado", lugar: "ramal", avanco: 0.55, estado: { pisca: "esquerdo" } },
+        { id: "carro", tipo: "ligeiro", lugar: "faixa_direita", avanco: 0.3 }
+      ],
+      elementos_criticos: ["pesado no ramal de entrada, com pisca esquerdo", "ligeiro na faixa da direita"],
+      avisos: ["Exemplo de formato: a resposta tem de ser validada por um instrutor."]
+    }
+  }
+];
+
+const $ = id => document.getElementById(id);
+const sel = $("preset");
+PRESETS.forEach((p, i) => { const o = document.createElement("option"); o.value = i; o.textContent = p.nome; sel.appendChild(o); });
+
+let selecionada = 1, ultimo = null;
+
+function carregar(i) {
+  const p = PRESETS[i];
+  $("enunciado").textContent = p.enunciado;
+  $("opcoes").innerHTML = "";
+  p.opcoes.forEach(([t, ok]) => { const li = document.createElement("li"); li.textContent = t; if (ok) li.className = "ok"; $("opcoes").appendChild(li); });
+  $("json").value = JSON.stringify(p.cena, null, 2);
+  $("variants").innerHTML = ""; $("vh").hidden = true; selecionada = 1;
+  render();
+}
+
+function lerCena() {
+  try { return { cena: JSON.parse($("json").value) }; }
+  catch (e) { return { erro: "JSON inválido: " + e.message }; }
+}
+
+function mensagens(lista) {
+  const m = $("msgs"); m.innerHTML = "";
+  lista.forEach(([tipo, t]) => { const d = document.createElement("div"); d.className = "msg " + tipo; d.textContent = t; m.appendChild(d); });
+}
+
+function render() {
+  const { cena, erro } = lerCena();
+  if (erro) { mensagens([["err", erro]]); $("gerar").disabled = $("png").disabled = true; return; }
+  const r = C.desenhar(cena, { semente: selecionada });
+  ultimo = r;
+  const msgs = r.erros.map(t => ["err", t]).concat(r.avisos.map(t => ["warn", t])).concat((cena.avisos || []).map(t => ["warn", "Aviso da IA: " + t]));
+  if (!r.erros.length && !msgs.length) msgs.push(["ok", "Cena válida."]);
+  mensagens(msgs);
+  $("stage").innerHTML = r.svg || "";
+  $("gerar").disabled = $("png").disabled = !!r.erros.length || !r.svg;
+  $("amb").textContent = r.svg ? "Variante " + selecionada + " · " + (r.ambiente || "").replace("_", " ") : "";
+  const ul = $("crit"); ul.innerHTML = "";
+  (cena.elementos_criticos || []).forEach((t, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = '<input type="checkbox" id="c' + i + '"><label for="c' + i + '"></label>';
+    li.querySelector("label").textContent = t; ul.appendChild(li);
+  });
+}
+
+function variantes() {
+  const { cena } = lerCena(); if (!cena) return;
+  const box = $("variants"); box.innerHTML = ""; $("vh").hidden = false;
+  for (let s = 1; s <= 20; s++) {
+    const r = C.desenhar(cena, { semente: s });
+    const b = document.createElement("button");
+    b.className = "variant"; b.setAttribute("aria-pressed", s === selecionada); b.setAttribute("aria-label", "Variante " + s);
+    b.innerHTML = r.svg + "<span>Variante " + s + " · " + r.ambiente.replace("_", " ") + "</span>";
+    b.onclick = () => { selecionada = s; render(); box.querySelectorAll(".variant").forEach(x => x.setAttribute("aria-pressed", x === b)); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    box.appendChild(b);
+  }
+}
+
+function descarregar() {
+  if (!ultimo || !ultimo.svg) return;
+  const img = new Image();
+  const url = URL.createObjectURL(new Blob([ultimo.svg], { type: "image/svg+xml" }));
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = 1024; c.height = 1024;
+    c.getContext("2d").drawImage(img, 0, 0, 1024, 1024); URL.revokeObjectURL(url);
+    c.toBlob(b => { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "cena-variante-" + selecionada + ".png"; a.click(); }, "image/png");
+  };
+  img.src = url;
+}
+
+let t;
+$("json").addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { render(); if (!$("vh").hidden) variantes(); }, 250); });
+sel.addEventListener("change", () => carregar(+sel.value));
+$("gerar").addEventListener("click", variantes);
+$("png").addEventListener("click", descarregar);
+$("pecas").innerHTML = C.pecas().map(p => "<b>" + p.nome + "</b> (<code>" + p.id + "</code>): " + p.lugares.map(l => "<code>" + l + "</code>").join(", ")).join("<br>") +
+  "<br><b>Elementos:</b> " + C.elementos().map(e => "<code>" + e + "</code>").join(", ") +
+  "<br><b>Estados:</b> <code>emergencia</code> (true/false), <code>pisca</code> (esquerdo, direito, ambos), <code>travao</code> (true/false)" +
+  "<br><b>Posições relativas:</b> <code>junto_a</code> + <code>posicao</code> (ao_lado, atras, a_frente)";
+carregar(0);
+</script>
+</body>
+</html>
