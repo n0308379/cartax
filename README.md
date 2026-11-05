@@ -32,7 +32,7 @@ Em [`/cenas`](https://cartax.skyxlee.com/cenas/) está a primeira versão do des
 - `cenas/desenhador.js`: o desenhador (peças de estrada, veículos, estados e validação).
 - `cenas/index.html`: o ecrã de teste do instrutor, com três exemplos.
 
-Peças disponíveis: entrada de autoestrada. As outras entram à medida que as perguntas-piloto as pedirem.
+Peças disponíveis: entrada de autoestrada, cruzamento em X e rotunda de 2 vias. As outras entram à medida que as perguntas do banco as pedirem.
 
 ## Limitações do protótipo
 

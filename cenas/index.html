@@ -112,7 +112,7 @@ document.getElementById("ver").textContent = "desenhador v" + C.versao;
 
 const PRESETS = [
   {
-    nome: "Ambulância em marcha de urgência, carro ao lado",
+    nome: "6.2 · Ambulância em marcha de urgência, carro ao lado",
     enunciado: "A ambulância, com luzes e sirene ligadas, deve ceder a passagem ao entrar na autoestrada?",
     opcoes: [["Sim, como qualquer veículo que entra na autoestrada", false], ["Não, em marcha de urgência são os outros que lhe facilitam a passagem", true]],
     cena: {
@@ -136,6 +136,52 @@ const PRESETS = [
         { id: "carro", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "amb", posicao: "atras" }
       ],
       elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência apagadas", "ligeiro na faixa da direita, atrás da ambulância"],
+      avisos: []
+    }
+  },
+  {
+    nome: "1.4 · Cruzamento com cedência de passagem",
+    enunciado: "Tens sinal de cedência de passagem. Na via principal vêm dois ligeiros: um pela direita e outro pela esquerda. A quem cedes?",
+    opcoes: [["Aos dois", true], ["Só ao da direita", false], ["Só ao da esquerda", false]],
+    cena: {
+      peca: "cruzamento_x",
+      sinais: { sul: "cedencia" },
+      elementos: [
+        { id: "tu", tipo: "ligeiro", lugar: "sul", avanco: 0.95, tu: true },
+        { id: "direita", tipo: "ligeiro", lugar: "este", avanco: 0.75 },
+        { id: "esquerda", tipo: "ligeiro", lugar: "oeste", avanco: 0.7 }
+      ],
+      elementos_criticos: ["sinal de cedência de passagem na tua entrada", "ligeiro a vir da direita", "ligeiro a vir da esquerda"],
+      avisos: []
+    }
+  },
+  {
+    nome: "6.3 · Bombeiros com o teu semáforo verde",
+    enunciado: "Tens o semáforo verde. Pela tua esquerda aproxima-se um veículo dos bombeiros com luzes e sirene ligadas. O que fazes?",
+    opcoes: [["Paras e deixas passar o veículo dos bombeiros", true], ["Avanças, porque tens verde", false], ["Avanças depressa, para sair do caminho", false]],
+    cena: {
+      peca: "cruzamento_x",
+      semaforos: { sul: "verde", oeste: "vermelho" },
+      elementos: [
+        { id: "tu", tipo: "ligeiro", lugar: "sul", avanco: 0.95, tu: true },
+        { id: "bombeiros", tipo: "bombeiros", lugar: "oeste", avanco: 0.7, estado: { emergencia: true } }
+      ],
+      elementos_criticos: ["semáforo verde na tua entrada", "veículo dos bombeiros a vir da esquerda", "luzes de emergência acesas"],
+      avisos: []
+    }
+  },
+  {
+    nome: "2.4 · Rotunda: na via interior, à chegada da saída",
+    enunciado: "Estás na via interior e chegas à tua saída com um ligeiro na via da direita, ao teu lado. O que fazes?",
+    opcoes: [["Continuas na rotunda e sais na volta seguinte", true], ["Sais à frente dele, com pisca", false], ["Paras na via interior até ele passar", false]],
+    cena: {
+      peca: "rotunda_2vias",
+      saida_destacada: "oeste",
+      elementos: [
+        { id: "tu", tipo: "ligeiro", lugar: "via_interior", avanco: 0.72, tu: true },
+        { id: "outro", tipo: "ligeiro", lugar: "via_exterior", junto_a: "tu", posicao: "ao_lado" }
+      ],
+      elementos_criticos: ["tu na via interior, junto à saída", "ligeiro na via exterior, ao teu lado", "a tua saída destacada"],
       avisos: []
     }
   },
@@ -233,7 +279,10 @@ $("png").addEventListener("click", descarregar);
 $("pecas").innerHTML = C.pecas().map(p => "<b>" + p.nome + "</b> (<code>" + p.id + "</code>): " + p.lugares.map(l => "<code>" + l + "</code>").join(", ")).join("<br>") +
   "<br><b>Elementos:</b> " + C.elementos().map(e => "<code>" + e + "</code>").join(", ") +
   "<br><b>Estados:</b> <code>emergencia</code> (true/false), <code>pisca</code> (esquerdo, direito, ambos), <code>travao</code> (true/false)" +
-  "<br><b>Posições relativas:</b> <code>junto_a</code> + <code>posicao</code> (ao_lado, atras, a_frente)";
+  "<br><b>Posições relativas:</b> <code>junto_a</code> + <code>posicao</code> (ao_lado, atras, a_frente)" +
+  "<br><b>Na cena:</b> <code>sinais</code> e <code>semaforos</code> por aproximação (ex.: <code>{\"sul\": \"cedencia\"}</code>; sinais: " + C.sinais().map(x => "<code>" + x + "</code>").join(", ") + "), <code>saida_destacada</code> na rotunda" +
+  "<br><b>No elemento:</b> <code>tu: true</code> marca o carro do aluno" +
+  "<br><b>Rotunda:</b> nas vias do anel, <code>avanco</code> 0 = junto à entrada sul, 0,25 = saída este (1.ª), 0,5 = norte (2.ª), 0,75 = oeste (3.ª)";
 carregar(0);
 </script>
 </body>
