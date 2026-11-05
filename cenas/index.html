@@ -68,7 +68,7 @@ code{font-family:var(--mono);font-size:13px;background:#ecebe6;padding:1px 4px;b
   <div class="grid">
     <div class="card">
       <div>
-        <div class="label">Exemplo</div>
+        <div class="label">Pergunta do banco (<span id="nq"></span>)</div>
         <select id="preset" aria-label="Escolher exemplo"></select>
       </div>
       <div>
@@ -94,7 +94,7 @@ code{font-family:var(--mono);font-size:13px;background:#ecebe6;padding:1px 4px;b
         <button class="btn ghost" id="png">Descarregar PNG</button>
         <span class="note" id="amb"></span>
       </div>
-      <p class="note">As variantes só mudam o que não altera a resposta: cores e modelos dos carros, hora do dia, piso molhado e vegetação. A estrada, os lugares e os estados vêm sempre da descrição.</p>
+      <p class="note">Banco de perguntas v0.1: rascunho, cada pergunta tem de ser validada por um instrutor. As variantes só mudam o que não altera a resposta: cores e modelos dos carros, hora do dia, piso molhado e vegetação. A estrada, os lugares e os estados vêm sempre da descrição.</p>
     </div>
   </div>
 
@@ -106,104 +106,23 @@ code{font-family:var(--mono);font-size:13px;background:#ecebe6;padding:1px 4px;b
 </div>
 
 <script src="desenhador.js"></script>
+<script src="banco.js"></script>
 <script>
 const C = window.CartaXCenas;
 document.getElementById("ver").textContent = "desenhador v" + C.versao;
 
-const PRESETS = [
-  {
-    nome: "6.2 · Ambulância em marcha de urgência, carro ao lado",
-    enunciado: "A ambulância, com luzes e sirene ligadas, deve ceder a passagem ao entrar na autoestrada?",
-    opcoes: [["Sim, como qualquer veículo que entra na autoestrada", false], ["Não, em marcha de urgência são os outros que lhe facilitam a passagem", true]],
-    cena: {
-      peca: "entrada_autoestrada",
-      elementos: [
-        { id: "amb", tipo: "ambulancia", lugar: "via_aceleracao", avanco: 0.5, estado: { emergencia: true } },
-        { id: "carro", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "amb", posicao: "ao_lado" }
-      ],
-      elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência acesas", "ligeiro na faixa da direita, ao lado da ambulância"],
-      avisos: []
-    }
-  },
-  {
-    nome: "Ambulância sem urgência, carro atrás",
-    enunciado: "A ambulância, sem luzes nem sirene, vai entrar na autoestrada. Quem tem prioridade?",
-    opcoes: [["A ambulância, por ser um veículo de socorro", false], ["O ligeiro, que já circula na autoestrada", true]],
-    cena: {
-      peca: "entrada_autoestrada",
-      elementos: [
-        { id: "amb", tipo: "ambulancia", lugar: "via_aceleracao", avanco: 0.6, estado: { emergencia: false, pisca: "esquerdo" } },
-        { id: "carro", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "amb", posicao: "atras" }
-      ],
-      elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência apagadas", "ligeiro na faixa da direita, atrás da ambulância"],
-      avisos: []
-    }
-  },
-  {
-    nome: "1.4 · Cruzamento com cedência de passagem",
-    enunciado: "Tens sinal de cedência de passagem. Na via principal vêm dois ligeiros: um pela direita e outro pela esquerda. A quem cedes?",
-    opcoes: [["Aos dois", true], ["Só ao da direita", false], ["Só ao da esquerda", false]],
-    cena: {
-      peca: "cruzamento_x",
-      sinais: { sul: "cedencia" },
-      elementos: [
-        { id: "tu", tipo: "ligeiro", lugar: "sul", avanco: 0.95, tu: true },
-        { id: "direita", tipo: "ligeiro", lugar: "este", avanco: 0.75 },
-        { id: "esquerda", tipo: "ligeiro", lugar: "oeste", avanco: 0.7 }
-      ],
-      elementos_criticos: ["sinal de cedência de passagem na tua entrada", "ligeiro a vir da direita", "ligeiro a vir da esquerda"],
-      avisos: []
-    }
-  },
-  {
-    nome: "6.3 · Bombeiros com o teu semáforo verde",
-    enunciado: "Tens o semáforo verde. Pela tua esquerda aproxima-se um veículo dos bombeiros com luzes e sirene ligadas. O que fazes?",
-    opcoes: [["Paras e deixas passar o veículo dos bombeiros", true], ["Avanças, porque tens verde", false], ["Avanças depressa, para sair do caminho", false]],
-    cena: {
-      peca: "cruzamento_x",
-      semaforos: { sul: "verde", oeste: "vermelho" },
-      elementos: [
-        { id: "tu", tipo: "ligeiro", lugar: "sul", avanco: 0.95, tu: true },
-        { id: "bombeiros", tipo: "bombeiros", lugar: "oeste", avanco: 0.7, estado: { emergencia: true } }
-      ],
-      elementos_criticos: ["semáforo verde na tua entrada", "veículo dos bombeiros a vir da esquerda", "luzes de emergência acesas"],
-      avisos: []
-    }
-  },
-  {
-    nome: "2.4 · Rotunda: na via interior, à chegada da saída",
-    enunciado: "Estás na via interior e chegas à tua saída com um ligeiro na via da direita, ao teu lado. O que fazes?",
-    opcoes: [["Continuas na rotunda e sais na volta seguinte", true], ["Sais à frente dele, com pisca", false], ["Paras na via interior até ele passar", false]],
-    cena: {
-      peca: "rotunda_2vias",
-      saida_destacada: "oeste",
-      elementos: [
-        { id: "tu", tipo: "ligeiro", lugar: "via_interior", avanco: 0.72, tu: true },
-        { id: "outro", tipo: "ligeiro", lugar: "via_exterior", junto_a: "tu", posicao: "ao_lado" }
-      ],
-      elementos_criticos: ["tu na via interior, junto à saída", "ligeiro na via exterior, ao teu lado", "a tua saída destacada"],
-      avisos: []
-    }
-  },
-  {
-    nome: "Pesado no ramal, ligeiro na faixa da direita",
-    enunciado: "O pesado está no ramal de entrada. O que deve fazer o condutor do ligeiro?",
-    opcoes: [["Travar a fundo para o deixar entrar", false], ["Manter a marcha e, se for seguro, facilitar a entrada mudando de faixa", true]],
-    cena: {
-      peca: "entrada_autoestrada",
-      elementos: [
-        { id: "camiao", tipo: "pesado", lugar: "ramal", avanco: 0.55, estado: { pisca: "esquerdo" } },
-        { id: "carro", tipo: "ligeiro", lugar: "faixa_direita", avanco: 0.3 }
-      ],
-      elementos_criticos: ["pesado no ramal de entrada, com pisca esquerdo", "ligeiro na faixa da direita"],
-      avisos: ["Exemplo de formato: a resposta tem de ser validada por um instrutor."]
-    }
-  }
-];
+const PRESETS = (window.CartaXBanco || []).map(q => ({
+  nome: q.id + " · " + q.enunciado.slice(0, 70) + (q.enunciado.length > 70 ? "…" : ""),
+  tema: q.tema, enunciado: q.enunciado, opcoes: q.opcoes, cena: q.cena
+}));
 
 const $ = id => document.getElementById(id);
 const sel = $("preset");
-PRESETS.forEach((p, i) => { const o = document.createElement("option"); o.value = i; o.textContent = p.nome; sel.appendChild(o); });
+const grupos = {};
+PRESETS.forEach((p, i) => {
+  if (!grupos[p.tema]) { grupos[p.tema] = document.createElement("optgroup"); grupos[p.tema].label = p.tema; sel.appendChild(grupos[p.tema]); }
+  const o = document.createElement("option"); o.value = i; o.textContent = p.nome; grupos[p.tema].appendChild(o);
+});
 
 let selecionada = 1, ultimo = null;
 
@@ -283,6 +202,7 @@ $("pecas").innerHTML = C.pecas().map(p => "<b>" + p.nome + "</b> (<code>" + p.id
   "<br><b>Na cena:</b> <code>sinais</code> e <code>semaforos</code> por aproximação (ex.: <code>{\"sul\": \"cedencia\"}</code>; sinais: " + C.sinais().map(x => "<code>" + x + "</code>").join(", ") + "), <code>saida_destacada</code> na rotunda" +
   "<br><b>No elemento:</b> <code>tu: true</code> marca o carro do aluno" +
   "<br><b>Rotunda:</b> nas vias do anel, <code>avanco</code> 0 = junto à entrada sul, 0,25 = saída este (1.ª), 0,5 = norte (2.ª), 0,75 = oeste (3.ª)";
+document.getElementById("nq").textContent = PRESETS.length + " com ilustração";
 carregar(0);
 </script>
 </body>

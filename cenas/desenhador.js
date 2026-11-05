@@ -8,7 +8,7 @@
 (function (global) {
   "use strict";
 
-  var VERSAO = "0.2.0";
+  var VERSAO = "0.3.0";
   var W = 1000, H = 1000;
   var BRANCO = "#f3f1ea";
 
@@ -89,6 +89,7 @@
     perigo: function () { return '<polygon points="0,-22 23,18 -23,18" fill="#fff" stroke="#c62828" stroke-width="5" stroke-linejoin="round"/><rect x="-2.5" y="-8" width="5" height="14" fill="#1b1b1b"/><circle cx="0" cy="11" r="2.8" fill="#1b1b1b"/>'; },
     limite_50: function () { return '<circle r="22" fill="#fff" stroke="#c62828" stroke-width="6"/><text x="0" y="7" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="19" fill="#1b1b1b">50</text>'; },
     obrigacao_direita: function () { return '<circle r="22" fill="#1f5fae" stroke="#fff" stroke-width="2"/><path d="M-9 12 L-9 -1 Q-9 -6 -4 -6 L5 -6" fill="none" stroke="#fff" stroke-width="5"/><path d="M3 -13 L13 -6 L3 1 Z" fill="#fff"/>'; },
+    passadeira: function () { return '<rect x="-20" y="-20" width="40" height="40" rx="4" fill="#1f5fae" stroke="#fff" stroke-width="2"/><polygon points="0,-15 15,13 -15,13" fill="#fff"/><circle cx="1" cy="-4" r="2.6" fill="#1b1b1b"/><path d="M1 -1 L0 6 M0 6 L-4 11 M0 6 L4 11 M-4 2 L5 1" stroke="#1b1b1b" stroke-width="2" fill="none"/><rect x="-11" y="10" width="22" height="2" fill="#1b1b1b"/>'; },
     prioridade: function () { return '<rect x="-16" y="-16" width="32" height="32" transform="rotate(45)" fill="#f5c400" stroke="#fff" stroke-width="5"/>'; }
   };
   function sinal(tipo, x, y) {
@@ -298,6 +299,177 @@
     return { lugares: lugares, estrada: estrada, livre: livre, nome: "Rotunda de 2 vias", parametros: ["sinais", "semaforos", "saida_destacada"] };
   })();
 
+  /* ---------- peças de estrada simples (v0.3) ---------- */
+  function relvaMato(cx, cy, r0, r1, a0, a1, rr, n) {
+    // mato denso numa coroa circular (para tapar a visibilidade numa curva)
+    var s = "";
+    for (var i = 0; i < n; i++) {
+      var a = rad(a0 + (a1 - a0) * rr()), d = r0 + (r1 - r0) * rr(), x = cx + d * Math.cos(a), y = cy - d * Math.sin(a), raio = 26 + rr() * 26;
+      s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + raio.toFixed(1) + '" fill="#4e7a3a" stroke="rgba(0,0,0,0.12)"/>';
+    }
+    return s;
+  }
+  function marco(x, y) {
+    return '<g transform="translate(' + x + " " + y + ') scale(1.8)"><rect x="-4" y="-2" width="14" height="14" fill="rgba(0,0,0,0.22)"/><rect x="-7" y="-7" width="14" height="14" rx="2" fill="#f4f4f0" stroke="#333" stroke-width="1.5"/><rect x="-7" y="-7" width="14" height="5" fill="#c62828"/></g>';
+  }
+
+  /* Estrada de 2 sentidos, em reta (uma via por sentido) */
+  PECAS.estrada_2sentidos = (function () {
+    var lugares = {
+      via: linha(550, 960, 550, 40, "via (sentido de marcha para cima)"),
+      sentido_contrario: linha(450, 40, 450, 960, "via do sentido contrário"),
+      junto_berma: linha(580, 960, 580, 40, "junto à berma direita")
+    };
+    function estrada(amb, cena, avisos) {
+      var s = ['<rect x="400" y="0" width="200" height="1000" fill="' + amb.asfalto + '"/>'];
+      s.push('<rect x="380" y="0" width="20" height="1000" fill="#b9b19a"/><rect x="600" y="0" width="20" height="1000" fill="#b9b19a"/>');
+      s.push(seg(404, 0, 404, 1000, BRANCO, 4) + seg(596, 0, 596, 1000, BRANCO, 4));
+      s.push(cena.linha_central === "continua" ? seg(500, 0, 500, 1000, BRANCO, 5) : tracejado(500, 0, 500, 1000, BRANCO, 5, 40, 40));
+      (cena.marcos_berma || []).forEach(function (t) {
+        var tt = Math.max(0, Math.min(1, +t)); s.push(marco(640, 960 - 920 * tt));
+      });
+      return s.join("");
+    }
+    function livre(x, y) { return Math.abs(x - 500) > 160; }
+    return { lugares: lugares, estrada: estrada, livre: livre, nome: "Estrada de 2 sentidos", parametros: ["linha_central", "marcos_berma"] };
+  })();
+
+  /* Estrada de 2 sentidos com curva para a esquerda e mato a tapar a vista */
+  PECAS.estrada_curva = (function () {
+    var CX = 100, CY = 560, RC = 400, RETA = 440;
+    function pontoVia(t) {
+      var R = RC + 50, L = RETA + R * Math.PI / 2, s = t * L;
+      if (s < RETA) return { x: 550, y: 1000 - s, rumo: 0 };
+      var f = (s - RETA) / R;
+      return { x: CX + R * Math.cos(f), y: CY - R * Math.sin(f), rumo: -f * 180 / Math.PI };
+    }
+    function pontoContrario(t) {
+      var R = RC - 50, A = R * Math.PI / 2, L = A + RETA, s = t * L;
+      if (s < A) { var f = Math.PI / 2 - s / R; return { x: CX + R * Math.cos(f), y: CY - R * Math.sin(f), rumo: 180 - f * 180 / Math.PI }; }
+      return { x: 450, y: CY + (s - A), rumo: 180 };
+    }
+    var lugares = {
+      via: { tipo: "curva", ponto: pontoVia, nome: "via (entra na curva para a esquerda)" },
+      sentido_contrario: { tipo: "curva", ponto: pontoContrario, nome: "via do sentido contrário" }
+    };
+    function caminho(off) { var R = RC + off; return "M" + (500 + off) + " 1010 L" + (500 + off) + " " + CY + " A" + R + " " + R + " 0 0 0 " + CX + " " + (CY - R) + " L-20 " + (CY - R); }
+    function estrada(amb, cena) {
+      var s = ['<path d="' + caminho(0) + '" fill="none" stroke="#b9b19a" stroke-width="240"/>'];
+      s.push('<path d="' + caminho(0) + '" fill="none" stroke="' + amb.asfalto + '" stroke-width="200"/>');
+      s.push('<path d="' + caminho(96) + '" fill="none" stroke="' + BRANCO + '" stroke-width="4"/><path d="' + caminho(-96) + '" fill="none" stroke="' + BRANCO + '" stroke-width="4"/>');
+      s.push('<path d="' + caminho(0) + '" fill="none" stroke="' + BRANCO + '" stroke-width="5"/>');
+      var rr = rng(4242);
+      s.push(relvaMato(CX, CY, 40, RC - 130, 0, 90, rr, 70));
+      return s.join("");
+    }
+    function livre(x, y) {
+      var d = Math.hypot(x - CX, y - CY);
+      if (y <= CY && x >= CX - 40) return d > RC + 140;
+      if (y > CY) return Math.abs(x - 500) > 150;
+      return Math.abs(y - (CY - RC)) > 150;
+    }
+    return { lugares: lugares, estrada: estrada, livre: livre, nome: "Estrada de 2 sentidos com curva", parametros: [] };
+  })();
+
+  /* Entroncamento em T: estrada principal horizontal, secundária a chegar de sul */
+  PECAS.entroncamento_t = (function () {
+    var ap = { sul: linha(550, 960, 550, 700, "aproximação sul"), este: linha(960, 450, 700, 450, "aproximação este"), oeste: linha(40, 550, 300, 550, "aproximação oeste") };
+    var lugares = {
+      sul: ap.sul, este: ap.este, oeste: ap.oeste,
+      principal_para_este: linha(40, 550, 960, 550, "estrada principal, sentido este"),
+      principal_para_oeste: linha(960, 450, 40, 450, "estrada principal, sentido oeste"),
+      saida_sul: linha(450, 640, 450, 960, "saída para sul")
+    };
+    function estrada(amb, cena, avisos) {
+      var a = amb.asfalto, s = [];
+      s.push('<rect x="0" y="400" width="1000" height="200" fill="' + a + '"/><rect x="400" y="600" width="200" height="400" fill="' + a + '"/>');
+      ["M0 392 H1000", "M0 608 H392 V1000", "M1000 608 H608 V1000"].forEach(function (d) { s.push('<path d="' + d + '" fill="none" stroke="#c9c5ba" stroke-width="16"/>'); });
+      s.push(seg(0, 404, 1000, 404, BRANCO, 4) + seg(0, 596, 396, 596, BRANCO, 4) + seg(604, 596, 1000, 596, BRANCO, 4));
+      s.push(seg(404, 604, 404, 1000, BRANCO, 4) + seg(596, 604, 596, 1000, BRANCO, 4));
+      s.push(tracejado(0, 500, 1000, 500, BRANCO, 5, 40, 40));
+      s.push(seg(500, 640, 500, 760, BRANCO, 5) + tracejado(500, 760, 500, 1000, BRANCO, 5, 40, 40));
+      var sin = (cena.sinais || {}).sul;
+      if (sin === "stop") s.push(seg(502, 640, 598, 640, BRANCO, 10));
+      else if (sin === "cedencia") s.push(dentes(502, 640, 598, 640, 0, 1));
+      moveis(cena, ap, s, avisos, 85);
+      return s.join("");
+    }
+    function livre(x, y) { return y < 370 || (y > 630 && Math.abs(x - 500) > 140); }
+    return { lugares: lugares, estrada: estrada, livre: livre, nome: "Entroncamento em T", parametros: ["sinais", "semaforos"] };
+  })();
+
+  /* Rua urbana com passadeira: 2 sentidos (rua) ou 2 faixas no mesmo sentido (avenida) */
+  function pecaRua(sentidoUnico) {
+    var lugares = sentidoUnico ? {
+      faixa_esquerda: linha(450, 960, 450, 40, "faixa da esquerda"),
+      faixa_direita: linha(550, 960, 550, 40, "faixa da direita")
+    } : {
+      via: linha(550, 960, 550, 40, "via (sentido de marcha para cima)"),
+      sentido_contrario: linha(450, 40, 450, 960, "via do sentido contrário"),
+      junto_passeio: linha(574, 960, 574, 40, "junto ao passeio direito")
+    };
+    lugares.passadeira = linha(640, 440, 360, 440, "passadeira (de este para oeste)");
+    lugares.passeio_direito = linha(636, 960, 636, 40, "passeio direito");
+    lugares.passeio_esquerdo = linha(364, 40, 364, 960, "passeio esquerdo");
+    function estrada(amb, cena, avisos) {
+      var s = ['<rect x="320" y="0" width="360" height="1000" fill="#c9c5ba"/><rect x="400" y="0" width="200" height="1000" fill="' + amb.asfalto + '"/>'];
+      s.push(seg(398, 0, 398, 1000, "#a9a496", 4) + seg(602, 0, 602, 1000, "#a9a496", 4));
+      for (var x = 412; x < 590; x += 30) s.push('<rect x="' + x + '" y="400" width="17" height="80" fill="' + BRANCO + '"/>');
+      if (sentidoUnico) s.push(tracejado(500, 0, 500, 380, BRANCO, 5, 40, 40) + tracejado(500, 500, 500, 1000, BRANCO, 5, 40, 40));
+      else s.push(tracejado(500, 0, 500, 360, BRANCO, 5, 40, 40) + seg(500, 360, 500, 395, BRANCO, 5) + seg(500, 485, 500, 540, BRANCO, 5) + tracejado(500, 540, 500, 1000, BRANCO, 5, 40, 40));
+      // linhas de paragem antes da passadeira
+      s.push(seg(502, 520, 598, 520, BRANCO, 6));
+      if (sentidoUnico) s.push(seg(402, 520, 498, 520, BRANCO, 6)); else s.push(seg(402, 360, 498, 360, BRANCO, 6));
+      // sinal de passadeira nos passeios
+      s.push(sinal("passadeira", 655, 500) + sinal("passadeira", 345, 380));
+      return s.join("");
+    }
+    function livre(x, y) { return Math.abs(x - 500) > 210; }
+    return { lugares: lugares, estrada: estrada, livre: livre, nome: sentidoUnico ? "Passadeira em avenida de 2 faixas" : "Passadeira em rua de 2 sentidos", parametros: [] };
+  }
+  PECAS.passadeira_rua = pecaRua(false);
+  PECAS.passadeira_avenida = pecaRua(true);
+
+  /* Troço de autoestrada: 3 faixas por sentido, sem entradas */
+  PECAS.troco_autoestrada = (function () {
+    var lugares = {
+      faixa_esquerda: linha(410, 960, 410, 40, "faixa da esquerda"),
+      faixa_central: linha(510, 960, 510, 40, "faixa central"),
+      faixa_direita: linha(610, 960, 610, 40, "faixa da direita"),
+      sentido_contrario: linha(170, 40, 170, 960, "faixa do sentido contrário")
+    };
+    function estrada(amb) {
+      var a = amb.asfalto, s = [];
+      s.push('<rect x="40" y="0" width="260" height="1000" fill="' + a + '"/>');
+      s.push('<rect x="300" y="0" width="60" height="1000" fill="#a9a59a"/><rect x="326" y="0" width="8" height="1000" fill="#8a8a86"/>');
+      s.push(seg(318, 0, 318, 1000, "#d9dbde", 4) + seg(342, 0, 342, 1000, "#d9dbde", 4));
+      s.push('<rect x="360" y="0" width="300" height="1000" fill="' + a + '"/><rect x="660" y="0" width="40" height="1000" fill="#7d7f80"/>');
+      s.push(seg(44, 0, 44, 1000, BRANCO) + seg(296, 0, 296, 1000, BRANCO) + seg(364, 0, 364, 1000, BRANCO) + seg(656, 0, 656, 1000, BRANCO));
+      s.push(tracejado(127, 0, 127, 1000, BRANCO, 6, 40, 60) + tracejado(213, 0, 213, 1000, BRANCO, 6, 40, 60));
+      s.push(tracejado(460, 0, 460, 1000, BRANCO, 6, 40, 60) + tracejado(560, 0, 560, 1000, BRANCO, 6, 40, 60));
+      s.push(seg(706, 0, 706, 1000, "#d9dbde", 4));
+      return s.join("");
+    }
+    function livre(x) { return x > 740 || x < 20; }
+    return { lugares: lugares, estrada: estrada, livre: livre, nome: "Troço de autoestrada", parametros: [] };
+  })();
+
+  /* Sinal isolado: um sinal em destaque junto a uma estrada */
+  PECAS.sinal_isolado = (function () {
+    var lugares = { via: linha(450, 960, 450, 40, "via") };
+    function estrada(amb, cena, avisos) {
+      var s = ['<rect x="350" y="0" width="200" height="1000" fill="' + amb.asfalto + '"/>'];
+      s.push(seg(354, 0, 354, 1000, BRANCO, 4) + seg(546, 0, 546, 1000, BRANCO, 4) + tracejado(450, 0, 450, 1000, BRANCO, 5, 40, 40));
+      var tipo = cena.sinal;
+      if (!SINAIS[tipo]) { avisos.push('Sinal "' + tipo + '" ainda não existe. Disponíveis: ' + Object.keys(SINAIS).join(", ") + "."); return s.join(""); }
+      s.push('<rect x="748" y="470" width="10" height="260" fill="rgba(0,0,0,0.22)"/><rect x="740" y="460" width="10" height="260" fill="#8d9093"/>');
+      s.push('<g transform="translate(745 420) scale(5.2)">' + SINAIS[tipo]() + "</g>");
+      return s.join("");
+    }
+    function livre(x, y) { return (x > 600 && (x < 640 || x > 880 || y > 760)) || x < 300; }
+    return { lugares: lugares, estrada: estrada, livre: livre, nome: "Sinal isolado", parametros: ["sinal"] };
+  })();
+
   /* ---------- veículos (vistos de cima, a apontar para cima) ---------- */
   function sombra(w, h, amb) {
     var o = amb.sombra;
@@ -335,6 +507,32 @@
   }
 
   var VEICULOS = {
+    bicicleta: function (r, estado, amb) {
+      var cor = pick(r, ["#2c4f86", "#a3282b", "#3c6e4f", "#e0a81c", "#2f3640"]), capacete = pick(r, ["#f2f2ee", "#e0a81c", "#c62828", "#1f2a33"]);
+      var s = '<ellipse cx="' + (amb.sombra[0] * 0.6) + '" cy="' + (amb.sombra[1] * 0.6) + '" rx="16" ry="32" fill="rgba(0,0,0,0.22)"/>';
+      s += '<rect x="-3" y="-31" width="6" height="18" rx="3" fill="#1d1f22"/><rect x="-3" y="13" width="6" height="18" rx="3" fill="#1d1f22"/>';
+      s += seg(0, -16, 0, 14, "#5f666e", 3) + seg(-11, -18, 11, -18, "#2a2d33", 3);
+      s += '<ellipse cx="0" cy="0" rx="15" ry="8" fill="' + cor + '" stroke="#1d1f22" stroke-width="1.5"/>';
+      s += '<circle cx="0" cy="-4" r="7" fill="' + capacete + '" stroke="#1d1f22" stroke-width="1.5"/>';
+      return { svg: '<g transform="scale(1.3)">' + s + "</g>", w: 39, h: 80 };
+    },
+    peao: function (r, estado, amb) {
+      var roupa = pick(r, ["#2c4f86", "#a3282b", "#3c6e4f", "#6b4e9b", "#d9822b", "#4a4d52"]), cabelo = pick(r, ["#2b1d14", "#5a3b22", "#c9a26b", "#1b1b1b", "#9a9a9a"]);
+      var s = '<ellipse cx="' + (amb.sombra[0] * 0.5) + '" cy="' + (amb.sombra[1] * 0.5) + '" rx="16" ry="12" fill="rgba(0,0,0,0.22)"/>';
+      s += '<ellipse cx="-6" cy="-9" rx="4" ry="6" fill="#2a2d33"/><ellipse cx="6" cy="7" rx="4" ry="6" fill="#2a2d33"/>';
+      s += '<ellipse cx="0" cy="0" rx="15" ry="9" fill="' + roupa + '" stroke="#1d1f22" stroke-width="1.5"/>';
+      s += '<circle cx="0" cy="0" r="7.5" fill="' + cabelo + '" stroke="#1d1f22" stroke-width="1"/>';
+      return { svg: '<g transform="scale(1.45)">' + s + "</g>", w: 44, h: 35 };
+    },
+    trator: function (r, estado, amb) {
+      var cor = pick(r, ["#3c7a3a", "#c8211d", "#2c4f86"]), s = sombra(64, 112, amb);
+      s += '<rect x="-31" y="10" width="16" height="40" rx="4" fill="#1d1f22"/><rect x="15" y="10" width="16" height="40" rx="4" fill="#1d1f22"/>';
+      s += '<rect x="-26" y="-50" width="10" height="22" rx="3" fill="#1d1f22"/><rect x="16" y="-50" width="10" height="22" rx="3" fill="#1d1f22"/>';
+      s += '<rect x="-15" y="-56" width="30" height="62" rx="6" fill="' + cor + '" stroke="#1d1f22" stroke-width="2"/>';
+      s += '<rect x="-20" y="2" width="40" height="44" rx="5" fill="#2a2d33" stroke="#1d1f22" stroke-width="2"/><rect x="-16" y="6" width="32" height="36" rx="3" fill="' + cor + '"/>';
+      s += piscas(40, 104, estado.pisca);
+      return { svg: s, w: 64, h: 112 };
+    },
     ligeiro: function (r, estado, amb) {
       var m = pick(r, MODELOS_LIGEIRO), cor = pick(r, CORES_LIGEIRO), w = m.w, h = m.h;
       var s = sombra(w, h, amb);
@@ -433,9 +631,19 @@
   }
 
   // marca "TU" no veículo do aluno
-  function marcaTu(e) {
+  function marcaTu(e, outros) {
     var s = '<rect x="' + (-e.w / 2 - 9) + '" y="' + (-e.h / 2 - 9) + '" width="' + (e.w + 18) + '" height="' + (e.h + 18) + '" rx="14" fill="none" stroke="#ffb000" stroke-width="4" stroke-dasharray="10 7"/>';
-    var bx = e.x - Math.sin(rad(e.rumo)) * (e.h / 2 + 30), by = e.y + Math.cos(rad(e.rumo)) * (e.h / 2 + 30);
+    var fx = Math.sin(rad(e.rumo)), fy = -Math.cos(rad(e.rumo)); // para a frente
+    var cands = [[-fx * (e.h / 2 + 30), -fy * (e.h / 2 + 30)], [fy * (e.w / 2 + 38), -fx * (e.w / 2 + 38)], [-fy * (e.w / 2 + 38), fx * (e.w / 2 + 38)], [fx * (e.h / 2 + 30), fy * (e.h / 2 + 30)]];
+    var melhor = cands[0], folga = -1;
+    cands.forEach(function (c, i) {
+      var x = e.x + c[0], y = e.y + c[1], d = 1e9;
+      outros.forEach(function (o) { if (o !== e) d = Math.min(d, Math.hypot(o.x - x, o.y - y) - Math.max(o.w, o.h) / 2); });
+      if (x < 30 || x > 970 || y < 20 || y > 980) d = -1;
+      if (d > 30 && i === 0) d += 1000; // preferir atrás quando está livre
+      if (d > folga) { folga = d; melhor = c; }
+    });
+    var bx = e.x + melhor[0], by = e.y + melhor[1];
     var lbl = '<g transform="translate(' + bx.toFixed(1) + " " + by.toFixed(1) + ')"><rect x="-22" y="-14" width="44" height="26" rx="13" fill="#ffb000"/><text x="0" y="5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="15" fill="#1b1b1b">TU</text></g>';
     return { contorno: s, etiqueta: lbl };
   }
@@ -485,7 +693,7 @@
     var etiquetas = [];
     elementos.forEach(function (e) {
       var extra = "";
-      if (e.tu) { var m = marcaTu(e); extra = m.contorno; etiquetas.push(m.etiqueta); }
+      if (e.tu) { var m = marcaTu(e, elementos); extra = m.contorno; etiquetas.push(m.etiqueta); }
       s.push('<g transform="translate(' + e.x.toFixed(1) + " " + e.y.toFixed(1) + ") rotate(" + e.rumo.toFixed(1) + ')">' + e.svg + extra + "</g>");
     });
     if (amb.tinta) s.push('<rect width="1000" height="1000" fill="' + amb.tinta + '"/>');

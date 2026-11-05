@@ -32,7 +32,9 @@ Em [`/cenas`](https://cartax.skyxlee.com/cenas/) está a primeira versão do des
 - `cenas/desenhador.js`: o desenhador (peças de estrada, veículos, estados e validação).
 - `cenas/index.html`: o ecrã de teste do instrutor, com três exemplos.
 
-Peças disponíveis: entrada de autoestrada, cruzamento em X e rotunda de 2 vias. As outras entram à medida que as perguntas do banco as pedirem.
+- `cenas/banco.js`: as 29 perguntas do banco v0.1 que têm ilustração, cada uma com a descrição da cena (rascunho, por validar por um instrutor).
+
+Peças disponíveis: entrada de autoestrada, troço de autoestrada, cruzamento em X, entroncamento em T, rotunda de 2 vias, estrada de 2 sentidos (reta e com curva), passadeira (rua e avenida) e sinal isolado. Elementos: ligeiro, pesado, ambulância, bombeiros, trator, bicicleta e peão.
 
 ## Limitações do protótipo
 
