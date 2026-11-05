@@ -8,7 +8,7 @@
 (function (global) {
   "use strict";
 
-  var VERSAO = "0.3.0";
+  var VERSAO = "0.4.0";
   var W = 1000, H = 1000;
   var BRANCO = "#f3f1ea";
 
@@ -627,7 +627,7 @@
       t = el.avanco == null ? 0.5 : Math.max(0, Math.min(1, +el.avanco));
     }
     var p = pontoLugar(lug, t);
-    return { ref: ref, tipo: el.tipo, x: p.x, y: p.y, rumo: p.rumo, w: v.w, h: v.h, svg: v.svg, tu: !!el.tu };
+    return { ref: ref, tipo: el.tipo, x: p.x, y: p.y, rumo: p.rumo, w: v.w, h: v.h, svg: v.svg, tu: !!el.tu, estado: el.estado || {}, lugar: el.lugar, lugarNome: lug.nome, junto_a: el.junto_a, posicao: el.posicao };
   }
 
   // marca "TU" no veículo do aluno
@@ -699,14 +699,127 @@
     if (amb.tinta) s.push('<rect width="1000" height="1000" fill="' + amb.tinta + '"/>');
     s.push(etiquetas.join(""));
     s.push("</svg>");
-    return { svg: s.join(""), erros: erros, avisos: avisos, ambiente: nomeAmb, versao: VERSAO };
+    return { svg: s.join(""), erros: erros, avisos: avisos, ambiente: nomeAmb, versao: VERSAO, colocados: elementos };
   }
 
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
+  /* ---------- verificação dos elementos críticos ----------
+   * Compara a lista de elementos críticos (texto livre) com a descrição da cena.
+   * Não substitui o revisor: apanha contradições evidentes antes de a pergunta chegar à revisão.
+   */
+  var NOMES = { ligeiro: "Ligeiro", pesado: "Pesado", ambulancia: "Ambulância", bombeiros: "Veículo dos bombeiros", trator: "Trator", bicicleta: "Ciclista", peao: "Peão" };
+  var TIPOS_TEXTO = [
+    ["ambulancia", /ambulancia/], ["bombeiros", /bombeiros/], ["pesado", /\bpesado|camiao/], ["trator", /trator/],
+    ["bicicleta", /ciclista|bicicleta/], ["peao", /\bpeao|\bpeoes/], ["ligeiro", /\bligeiros?\b|\bcarros?\b/]
+  ];
+  function norm(t) { return String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+
+  function descrever(cena, colocados) {
+    var peca = PECAS[cena.peca], linhas = [];
+    if (!peca) return linhas;
+    linhas.push("Estrada: " + peca.nome);
+    Object.keys(cena.sinais || {}).forEach(function (k) { linhas.push("Sinal " + cena.sinais[k].replace(/_/g, " ") + " na entrada " + k); });
+    Object.keys(cena.semaforos || {}).forEach(function (k) { linhas.push("Semáforo " + cena.semaforos[k] + " na entrada " + k); });
+    if (cena.sinal) linhas.push("Sinal em destaque: " + cena.sinal.replace(/_/g, " "));
+    if (cena.saida_destacada) linhas.push("Saída destacada: " + cena.saida_destacada);
+    if ((cena.marcos_berma || []).length) linhas.push("Marco na berma");
+    colocados.forEach(function (e) {
+      var l = (e.tu ? "TU · " : "") + NOMES[e.tipo] + " · " + e.lugarNome;
+      if (e.junto_a) l += " · " + (e.posicao || "ao_lado").replace("_", " ").replace("atras", "atrás").replace("a frente", "à frente") + " de " + e.junto_a;
+      var st = [];
+      if (e.estado.emergencia === true) st.push("luzes de emergência acesas");
+      if (e.estado.emergencia === false && (e.tipo === "ambulancia" || e.tipo === "bombeiros")) st.push("luzes de emergência apagadas");
+      if (e.estado.pisca) st.push(e.estado.pisca === "ambos" ? "quatro piscas" : "pisca " + e.estado.pisca);
+      if (e.estado.travao) st.push("a travar");
+      linhas.push(l + (st.length ? " · " + st.join(", ") : ""));
+    });
+    return linhas;
+  }
+
+  // posição de o em relação a e: lado (+ direita, - esquerda) e avanço (+ à frente)
+  function relativo(e, o) {
+    var fx = Math.sin(rad(e.rumo)), fy = -Math.cos(rad(e.rumo)), rx = Math.cos(rad(e.rumo)), ry = Math.sin(rad(e.rumo));
+    var dx = o.x - e.x, dy = o.y - e.y;
+    return { frente: dx * fx + dy * fy, lado: dx * rx + dy * ry };
+  }
+
+  function verificarItem(texto, cena, cs) {
+    var t = norm(texto), msgs = [], tu = cs.filter(function (e) { return e.tu; })[0];
+    var outros = cs.filter(function (e) { return !e.tu; });
+    var mencionados = [];
+    TIPOS_TEXTO.forEach(function (p) {
+      if (p[1].test(t)) {
+        if (p[0] === "ligeiro" && /\bligeiros?\b|\bcarros?\b/.test(t) && cs.some(function (e) { return e.tipo !== "ligeiro"; }) && !/ligeiro|carro/.test(t.replace(/carro parado/, ""))) return;
+        mencionados.push(p[0]);
+        if (!cs.some(function (e) { return e.tipo === p[0]; })) msgs.push("Refere " + NOMES[p[0]].toLowerCase() + ", mas não há nenhum na cena.");
+      }
+    });
+    function temTipo(f) { return cs.filter(function (e) { return (!mencionados.length || mencionados.indexOf(e.tipo) >= 0) && f(e); }).length > 0; }
+    // estados
+    if (/luzes|emergencia/.test(t)) {
+      if (/acesa|ligad/.test(t) && !temTipo(function (e) { return e.estado.emergencia === true; })) msgs.push("Diz que as luzes de emergência estão acesas, mas na cena estão apagadas.");
+      if (/apagad|deslig|sem luzes/.test(t) && !temTipo(function (e) { return e.estado.emergencia !== true && (e.tipo === "ambulancia" || e.tipo === "bombeiros"); })) msgs.push("Diz que as luzes de emergência estão apagadas, mas na cena estão acesas.");
+    }
+    if (/pisca esquerdo/.test(t) && !cs.some(function (e) { return e.estado.pisca === "esquerdo" || e.estado.pisca === "ambos"; })) msgs.push("Refere pisca esquerdo, mas nenhum veículo o tem ligado.");
+    if (/pisca direito/.test(t) && !cs.some(function (e) { return e.estado.pisca === "direito" || e.estado.pisca === "ambos"; })) msgs.push("Refere pisca direito, mas nenhum veículo o tem ligado.");
+    // sinais, semáforos e outros elementos da estrada
+    var sin = cena.sinais || {}, sem = cena.semaforos || {}, valores = Object.keys(sin).map(function (k) { return sin[k]; }).concat(cena.sinal ? [cena.sinal] : []);
+    if (cena.peca === "rotunda_2vias") valores.push("cedencia");
+    if (/\bstop\b/.test(t) && valores.indexOf("stop") < 0) msgs.push("Refere um sinal STOP, mas a cena não o tem.");
+    if (/cedencia de passagem/.test(t) && /sinal|linha/.test(t) && valores.indexOf("cedencia") < 0) msgs.push("Refere o sinal de cedência de passagem, mas a cena não o tem.");
+    ["verde", "amarelo", "vermelho"].forEach(function (c) {
+      if (new RegExp("semaforo " + c).test(t) && !Object.keys(sem).some(function (k) { return sem[k] === c; })) msgs.push("Refere um semáforo " + c + ", mas a cena não o tem.");
+    });
+    if (/obrigacao|obrigatorio/.test(t) && !valores.some(function (v) { return /^obrigacao/.test(v); })) msgs.push("Refere um sinal de obrigação, mas a cena não o tem.");
+    if (/triangular|perigo/.test(t) && /sinal/.test(t) && valores.indexOf("perigo") < 0) msgs.push("Refere um sinal de perigo, mas a cena não o tem.");
+    if (/\b50\b/.test(t) && valores.indexOf("limite_50") < 0) msgs.push("Refere um limite de 50, mas a cena não o tem.");
+    if (/passadeira/.test(t) && !/^passadeira/.test(cena.peca)) msgs.push("Refere uma passadeira, mas a peça não tem passadeira.");
+    if (/\bmarco\b/.test(t) && !(cena.marcos_berma || []).length) msgs.push("Refere um marco na berma, mas a cena não o tem.");
+    if (/\bcurva\b/.test(t) && cena.peca !== "estrada_curva") msgs.push("Refere uma curva, mas a peça não tem curva.");
+    if (/saida destacada/.test(t) && !cena.saida_destacada) msgs.push("Refere uma saída destacada, mas a cena não tem nenhuma.");
+    // lugares
+    var LUG = [[/via de aceleracao/, "via_aceleracao"], [/\bramal\b/, "ramal"], [/via interior/, "via_interior"], [/via exterior/, "via_exterior"],
+      [/faixa da direita/, ["faixa_direita"]], [/faixa da esquerda/, ["faixa_esquerda"]], [/faixa central/, ["faixa_central"]]];
+    var livre = /\blivre\b/.test(t);
+    LUG.forEach(function (p) {
+      if (!p[0].test(t)) return;
+      var ids = [].concat(p[1]), nome = p[0].source.replace(/\\b/g, ""), ocupado = cs.some(function (e) { return ids.indexOf(e.lugar) >= 0; });
+      if (livre && ocupado) msgs.push("Diz que " + nome + " está livre, mas há um elemento lá.");
+      if (!livre && !ocupado) msgs.push("Refere " + nome + ", mas nenhum elemento está lá.");
+    });
+    // relações com o aluno
+    if (tu) {
+      var rel = outros.map(function (o) { return { o: o, r: relativo(tu, o) }; });
+      var vir = /\bvir\b|\bvem\b|\bvindo\b|aproxima|pela tua (direita|esquerda)|da tua (direita|esquerda)/.test(t);
+      if (/\bdireita\b/.test(t) && vir && !/faixa da direita|via da direita|berma direita|passeio direito/.test(t) && !rel.some(function (x) { return x.r.lado > 60; })) msgs.push("Diz que vem um veículo da direita, mas na cena não há nenhum à direita do aluno.");
+      if (/\besquerda\b/.test(t) && vir && !/faixa da esquerda|pisca esquerdo/.test(t) && !rel.some(function (x) { return x.r.lado < -60; })) msgs.push("Diz que vem um veículo da esquerda, mas na cena não há nenhum à esquerda do aluno.");
+      var contrario = outros.some(function (o) { var d = Math.abs(((o.rumo - tu.rumo) % 360 + 540) % 360 - 180); return d > 150; });
+      if (/sentido contrario/.test(t) && !livre && !contrario) msgs.push("Refere um veículo em sentido contrário, mas não há nenhum.");
+      if (/sentido contrario/.test(t) && livre && contrario) msgs.push("Diz que o sentido contrário está livre, mas há um veículo nele.");
+      if (/a tua frente/.test(t) && !rel.some(function (x) { return x.r.frente > 40; })) msgs.push("Diz que há um elemento à tua frente, mas não há nenhum.");
+      if (/atras de ti|por tras/.test(t) && !rel.some(function (x) { return x.r.frente < -40; })) msgs.push("Diz que há um elemento atrás de ti, mas não há nenhum.");
+    }
+    if (/ao (teu )?lado/.test(t) && !cs.some(function (a) { return cs.some(function (b) { if (a === b) return false; var r = relativo(a, b); return Math.abs(r.frente) < 60 && Math.abs(r.lado) > 40 && Math.abs(r.lado) < 170; }); })) msgs.push("Diz \"ao lado\", mas nenhum par de elementos está lado a lado.");
+    if (/atras (dele|dela|da |do )|a frente (dele|dela|da |do )/.test(t) && !cs.some(function (a) { return cs.some(function (b) { if (a === b) return false; var r = relativo(a, b); return Math.abs(r.lado) < 70 && r.frente > 40; }); })) msgs.push("Refere um elemento à frente ou atrás de outro, mas não há nenhum alinhado.");
+    return { texto: texto, ok: msgs.length === 0, mensagens: msgs };
+  }
+
+  function verificar(cena, opcoes) {
+    var r = desenhar(cena, opcoes || { semente: 1 });
+    if (r.erros.length) return { auto: [], criticos: [], erros: r.erros };
+    var cs = r.colocados;
+    return {
+      auto: descrever(cena, cs),
+      criticos: (cena.elementos_criticos || []).map(function (t) { return verificarItem(t, cena, cs); }),
+      erros: []
+    };
+  }
+
   var api = {
     versao: VERSAO,
     desenhar: desenhar,
+    verificar: verificar,
     pecas: function () { return Object.keys(PECAS).map(function (k) { return { id: k, nome: PECAS[k].nome, lugares: Object.keys(PECAS[k].lugares), parametros: PECAS[k].parametros }; }); },
     elementos: function () { return Object.keys(VEICULOS); },
     sinais: function () { return Object.keys(SINAIS); },

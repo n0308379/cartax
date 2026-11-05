@@ -40,6 +40,11 @@ textarea:focus,select:focus,button:focus-visible{outline:3px solid #9cc0f0;outli
 .msg.ok{background:#e5f4e4;color:#1e5e39}
 .crit{margin:0;padding:0;list-style:none;display:grid;gap:6px}
 .crit li{display:flex;gap:8px;align-items:flex-start}
+.chk{font-size:13px;margin-top:2px}
+.chk.ok{color:var(--ok)} .chk.ok::before{content:"✓ "}
+.chk.bad{color:var(--red);font-weight:700} .chk.bad::before{content:"⚠ "}
+.auto{margin:4px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+#critres{margin:6px 0}
 .crit input{margin-top:3px}
 .stage{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .stage svg{display:block;width:100%;height:auto}
@@ -82,8 +87,13 @@ code{font-family:var(--mono);font-size:13px;background:#ecebe6;padding:1px 4px;b
       </div>
       <div class="msgs" id="msgs" aria-live="polite"></div>
       <div>
-        <div class="label">Elementos críticos (o revisor confirma)</div>
+        <div class="label">Elementos críticos (verificação automática + o revisor confirma)</div>
+        <div class="msg" id="critres"></div>
         <ul class="crit" id="crit"></ul>
+      </div>
+      <div>
+        <div class="label">O que está na cena (gerado a partir da descrição)</div>
+        <ul class="auto" id="auto"></ul>
       </div>
     </div>
 
@@ -158,11 +168,22 @@ function render() {
   $("gerar").disabled = $("png").disabled = !!r.erros.length || !r.svg;
   $("amb").textContent = r.svg ? "Variante " + selecionada + " · " + (r.ambiente || "").replace("_", " ") : "";
   const ul = $("crit"); ul.innerHTML = "";
-  (cena.elementos_criticos || []).forEach((t, i) => {
+  const v = C.verificar(cena);
+  v.criticos.forEach((c, i) => {
     const li = document.createElement("li");
-    li.innerHTML = '<input type="checkbox" id="c' + i + '"><label for="c' + i + '"></label>';
-    li.querySelector("label").textContent = t; ul.appendChild(li);
+    li.innerHTML = '<input type="checkbox" id="c' + i + '"><div><label for="c' + i + '"></label><div class="chk"></div></div>';
+    li.querySelector("label").textContent = c.texto;
+    const chk = li.querySelector(".chk");
+    chk.className = "chk " + (c.ok ? "ok" : "bad");
+    chk.textContent = c.ok ? "Coerente com a cena" : c.mensagens.join(" ");
+    ul.appendChild(li);
   });
+  const falhas = v.criticos.filter(c => !c.ok).length;
+  $("critres").textContent = !v.criticos.length ? "Sem elementos críticos definidos." :
+    falhas ? falhas + " de " + v.criticos.length + " não batem certo com a cena. Corrigir antes de enviar para revisão." : "Os " + v.criticos.length + " elementos críticos batem certo com a cena.";
+  $("critres").className = "msg " + (!v.criticos.length || falhas ? "warn" : "ok");
+  const ua = $("auto"); ua.innerHTML = "";
+  v.auto.forEach(t => { const li = document.createElement("li"); li.textContent = t; ua.appendChild(li); });
 }
 
 function variantes() {
