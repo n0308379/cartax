@@ -1,5 +1,5 @@
+*.mov
+*.mp4
 .DS_Store
 Thumbs.db
-*.mp4
-*.mov
 node_modules/
