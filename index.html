@@ -125,7 +125,7 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .sbtn.gas{background:color-mix(in srgb,var(--ok) 25%,var(--asphalt-2));border-color:var(--ok)}
 .sbtn.brake.on{background:var(--red)} .sbtn.gas.on{background:var(--ok)}
 .hz-item .tutor{margin-top:6px}
-.demo-btn{width:100%;margin-top:14px}
+.demo-btn{width:100%;margin-top:14px;display:block;text-align:center;text-decoration:none;box-sizing:border-box}
 .video .scene{width:64%;margin-inline:auto}
 .video .q{font-size:22px;margin:12px 0 10px}
 .video .opt{padding:10px 12px}
@@ -267,8 +267,7 @@ function home(){
    <button class="node boss" disabled><span class="pin">★</span>${sg.boss()}<span class="txt"><h3>Exame final</h3><p>Simulação real do exame · em breve</p></span></button>
   </div>
   <div class="board"><span class="label">Ranking da semana</span><ol>${friends.map((f,i)=>`<li class="${f[0]==="Tu"?"me":""}"><span class="n">${i+1}</span><span class="who">${f[0]}</span><span>${f[1]} XP</span></li>`).join("")}</ol><p class="note">Amigos de exemplo, para demonstração.</p></div>
-  <button class="btn ghost demo-btn" id="demo">▶ Modo vídeo · 1 minuto</button>`;
-  $app.querySelector("#demo").onclick=runDemo;
+  <a class="btn ghost demo-btn" id="demo" href="video/">▶ Ver vídeo · 1 minuto</a>`;
   $app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>startLevel(b.dataset.l));
   $app.querySelector("[data-hz]").onclick=hazardIntro;
   $app.querySelector("[data-sim]").onclick=simIntro;
