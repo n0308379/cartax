@@ -264,13 +264,14 @@ function home(){
    ${LEVELS.map(l=>{const d=S.done[l.id];return `<button class="node ${d!=null?"done":""}" data-l="${l.id}"><span class="pin">${d!=null?"✓":l.n}</span>${sg[l.sign]()}<span class="txt"><h3>${l.name}</h3><p>${l.desc} · ${l.qs.length} perguntas</p></span>${d!=null?`<span class="tag">${d}%</span>`:""}</button>`}).join("")}
    <button class="node sim ${S.done.sim!=null?"done":""}" data-sim><span class="pin">${S.done.sim!=null?"✓":"3+"}</span>${sg.wheel()}<span class="txt"><h3>Ao volante: Rotunda</h3><p>Simulador · cede, escolhe a via, sinaliza</p></span>${S.done.sim!=null?`<span class="tag">${S.done.sim}%</span>`:`<span class="tag">NOVO</span>`}</button>
    <button class="node hazard ${S.done.hz!=null?"done":""}" data-hz><span class="pin">${S.done.hz!=null?"✓":"!"}</span>${sg.hazard()}<span class="txt"><h3>Missão: Vê o perigo</h3><p>Deteta o risco antes de ele acontecer</p></span>${S.done.hz!=null?`<span class="tag">${S.done.hz} pts</span>`:`<span class="tag">NOVO</span>`}</button>
-   <button class="node boss" disabled><span class="pin">★</span>${sg.boss()}<span class="txt"><h3>Exame final</h3><p>Simulação real do exame · em breve</p></span></button>
+   <button class="node boss" data-exame><span class="pin">★</span>${sg.boss()}<span class="txt"><h3>Exame final</h3><p>Simulação do exame · 30 perguntas, 30 minutos</p></span></button>
   </div>
   <div class="board"><span class="label">Ranking da semana</span><ol>${friends.map((f,i)=>`<li class="${f[0]==="Tu"?"me":""}"><span class="n">${i+1}</span><span class="who">${f[0]}</span><span>${f[1]} XP</span></li>`).join("")}</ol><p class="note">Amigos de exemplo, para demonstração.</p></div>
   <a class="btn ghost demo-btn" id="demo" href="video/">▶ Ver vídeo · 1 minuto</a>`;
   $app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>startLevel(b.dataset.l));
   $app.querySelector("[data-hz]").onclick=hazardIntro;
   $app.querySelector("[data-sim]").onclick=simIntro;
+  $app.querySelector("[data-exame]").onclick=()=>{location.href="exame/";};
 }
 
 let run;

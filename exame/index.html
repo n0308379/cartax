@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CartaX · Simulação de exame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+  :root{
+    --bg:#F5F3EE; --paper:#FFFFFF; --ink:#1C1F26; --soft:#4A5160; --line:#E2DFD6;
+    --blue:#1E63C4; --blue-bg:#E7F0FB; --ok:#1F7A4D; --ok-bg:#E3F3EA; --warn:#8A5A00; --warn-bg:#FBF0D9;
+    --bad:#B3261E; --bad-bg:#FBE9E7; --dark:#1C1F26;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Atkinson Hyperlegible',Arial,sans-serif;font-size:17px;line-height:1.5}
+  button{font:inherit}
+  .top{background:var(--dark);color:#F5F3EE;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));position:sticky;top:0;z-index:5}
+  .top-in{max-width:760px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between}
+  .logo{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:700;font-size:24px;display:flex;align-items:center;gap:6px;color:#F5F3EE;text-decoration:none}
+  .logo span{background:var(--blue);padding:0 8px;border-radius:6px}
+  .logo small{font-family:'Atkinson Hyperlegible',Arial,sans-serif;font-weight:400;font-size:15px;color:#C9CED8;margin-left:6px}
+  .relogio{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:700;font-size:26px;letter-spacing:.02em;background:#262A33;border:1px solid #3A3F4B;border-radius:8px;padding:2px 12px;min-width:92px;text-align:center}
+  .relogio.pouco{background:#5C3B00;border-color:#C9952B;color:#FFE3A6}
+  @media (max-width:440px){.top-in:has(#relogio:not([hidden])) .logo small{display:none}}
+  main{max-width:760px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
+  h1{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:700;font-size:clamp(30px,7vw,42px);line-height:1.1;margin:0;text-wrap:balance}
+  h2{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:700;font-size:22px;margin:0 0 10px}
+  .eyebrow{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin:0}
+  .muted{color:var(--soft)}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .regras{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 0}
+  .regra{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .regra b{display:block;font-family:'Barlow Condensed',Arial,sans-serif;font-size:34px;line-height:1.1;color:var(--blue)}
+  .regra span{font-size:14px;color:var(--soft)}
+  .bt{display:block;width:100%;border:none;border-radius:12px;padding:14px 16px;font-weight:700;font-size:19px;cursor:pointer;text-align:center;text-decoration:none}
+  .bt.pri{background:var(--blue);color:#fff}
+  .bt.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .bt.mau{background:#fff;color:var(--bad);border:1px solid #E9B8B3}
+  .bt:focus-visible,.op:focus-visible,.num:focus-visible,.nav button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .aviso{font-size:15px;color:var(--soft);margin:0}
+  .hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .hist li{display:flex;justify-content:space-between;gap:10px;font-size:15px;border-bottom:1px solid var(--line);padding:6px 0}
+  .hist .ok{color:var(--ok);font-weight:700}.hist .bad{color:var(--bad);font-weight:700}
+  /* exame */
+  .contador{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .contador b{font-family:'Barlow Condensed',Arial,sans-serif;font-size:22px}
+  .barra{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+  .barra i{display:block;height:100%;background:var(--blue)}
+  .img{border-radius:12px;overflow:hidden;background:#DDE3D8;border:1px solid var(--line)}
+  .img svg{display:block;width:100%;height:auto;max-height:40vh}
+  .enun{font-size:20px;font-weight:700;line-height:1.4;margin:0}
+  .ops{display:flex;flex-direction:column;gap:10px}
+  .op{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;color:var(--ink);font-size:18px;line-height:1.4}
+  .op .l{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:700;font-size:20px;min-width:1.2em;color:var(--soft)}
+  .op[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-bg)}
+  .op[aria-pressed="true"] .l{color:var(--blue)}
+  .nav{display:flex;gap:10px}
+  .nav button{flex:1;border-radius:12px;padding:12px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .nav button.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+  .nav button:disabled{opacity:.4;cursor:default}
+  details.grelha summary{cursor:pointer;font-weight:700;color:var(--blue)}
+  .nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-top:10px}
+  .num{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 0;font-weight:700;cursor:pointer;color:var(--soft)}
+  .num.feita{background:var(--blue-bg);border-color:#A9C6EC;color:var(--blue)}
+  .num.atual{outline:2px solid var(--ink);outline-offset:1px}
+  .desistir{background:none;border:none;color:#C9CED8;text-decoration:underline;cursor:pointer;font-size:15px;padding:0}
+  .confirma{border:2px solid #E9B8B3;background:var(--bad-bg)}
+  /* resultado */
+  .res{text-align:center;padding:24px 18px}
+  .res.ok{border:2px solid var(--ok);background:var(--ok-bg)}
+  .res.bad{border:2px solid var(--bad);background:var(--bad-bg)}
+  .res h1{font-size:clamp(40px,10vw,56px)}
+  .res.ok h1{color:var(--ok)}.res.bad h1{color:var(--bad)}
+  .res .nota{font-size:20px;margin:6px 0 0}
+  .uni{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .uni li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:15px}
+  .uni .b{grid-column:1/-1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+  .uni .b i{display:block;height:100%;background:var(--ok)}
+  .erro{border-left:4px solid var(--bad)}
+  .erro.certa{border-left-color:var(--ok)}
+  .erro .q{font-weight:700;margin:0 0 10px}
+  .linha{margin:8px 0 0;padding:10px 12px;border-radius:10px;font-size:16px}
+  .linha.tua{background:var(--bad-bg)}
+  .linha.boa{background:var(--ok-bg)}
+  .linha b{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+  .linha.tua b{color:var(--bad)}.linha.boa b{color:var(--ok)}
+  .tutor{margin-top:8px;padding:8px 12px;border-left:3px solid var(--blue);background:var(--blue-bg);border-radius:0 8px 8px 0;font-size:15px}
+  .tutor b{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--blue)}
+  .art{display:inline-block;margin-top:8px;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--blue-bg);color:var(--blue)}
+  details.ex{margin-top:8px;font-size:15px}
+  details.ex summary{cursor:pointer;color:var(--blue);font-weight:700}
+  .mini{max-width:260px;margin:0 0 10px}
+  footer{max-width:760px;margin:0 auto;padding:0 16px 32px;font-size:13px;color:var(--soft);text-align:center}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="logo" href="../" aria-label="CartaX, página inicial"><span>Carta</span>X<small>Simulação de exame</small></a>
+  <div class="relogio" id="relogio" hidden aria-label="Tempo que falta">30:00</div>
+</div></header>
+<main id="main"></main>
+<footer>Perguntas da CartaX escritas a partir do Código da Estrada, não as do IMT · cartax.skyxlee.com</footer>
+
+<script src="../cenas/desenhador.js"></script>
+<script src="../cenas/banco.js"></script>
+<script src="../cenas/perguntas_sem_cena.js"></script>
+<script src="../cenas/explicacoes.js"></script>
+<script src="../cenas/programa.js"></script>
+<script>
+(function () {
+  var C = window.CartaXCenas, E = window.CartaXExplicacoes || {}, P = window.CartaXPrograma;
+  var B = window.CartaXBanco; B = Array.isArray(B) ? B : (B.perguntas || []);
+  var BANCO = B.concat(window.CartaXSemCena || []).filter(function (q) { return E[q.id]; });
+  var FMT = P.exame, N = Math.min(FMT.perguntas, BANCO.length);
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var LET = "ABCD";
+  function guardar(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function ler(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function baralhar(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function mmss(s) { s = Math.max(0, Math.round(s)); return (s < 600 ? "0" : "") + Math.floor(s / 60) + ":" + (s % 60 < 10 ? "0" : "") + (s % 60); }
+  function unidade(q) { return P.pergunta[q.id] || "?"; }
+  function nomeUnidade(id) { var u = P.unidades.find(function (x) { return x.id === id; }); return u ? u.nome : "Outras"; }
+  function svgDe(q, semente, n) {
+    if (!q.cena || !C) return "";
+    try { return C.desenhar(q.cena, { semente: semente }).svg.replace(/brilhoAzul/g, "brilhoAzul" + n); } catch (e) { return ""; }
+  }
+
+  /* Escolhe as perguntas: quotas por unidade do programa (proporcionais ao plano das 200), o resto ao acaso. */
+  function escolher(n) {
+    var porU = {}, total = 0, sel = [];
+    BANCO.forEach(function (q) { var u = unidade(q); (porU[u] = porU[u] || []).push(q); });
+    Object.keys(porU).forEach(function (u) { baralhar(porU[u]); });
+    P.unidades.forEach(function (u) { total += u.alvo; });
+    P.unidades.forEach(function (u) { var quota = Math.round(n * u.alvo / total); sel = sel.concat((porU[u.id] || []).splice(0, quota)); });
+    var resto = baralhar([].concat.apply([], Object.keys(porU).map(function (u) { return porU[u]; })));
+    while (sel.length < n && resto.length) sel.push(resto.shift());
+    return baralhar(sel.slice(0, n));
+  }
+
+  var EX = null, tique = null;
+
+  function inicio() {
+    $("relogio").hidden = true;
+    var hist = ler("cartax.exames", []);
+    var h = '<div><p class="eyebrow">Categoria B · formato do exame do IMT</p><h1>Simulação do exame de código</h1></div>' +
+      '<div class="regras"><div class="regra"><b>' + FMT.perguntas + '</b><span>perguntas</span></div><div class="regra"><b>' + FMT.minutos + '</b><span>minutos</span></div><div class="regra"><b>' + FMT.minimoCertas + '</b><span>certas para passar</span></div></div>' +
+      '<section class="card"><h2>Como funciona</h2><ul style="margin:0;padding-left:20px">' +
+      '<li>Uma pergunta de cada vez, com uma só resposta certa.</li>' +
+      '<li>Só sabes o resultado quando entregares, como no exame.</li>' +
+      '<li>Podes andar para trás e para a frente e mudar respostas até entregar.</li>' +
+      '<li>Se o tempo acabar, o exame é entregue tal como está.</li>' +
+      '<li>No fim vês os erros, com a explicação e o artigo do Código.</li></ul></section>' +
+      '<button class="bt pri" id="comecar">Começar o exame</button>' +
+      (N < FMT.perguntas ? '<p class="aviso">Versão de demonstração: o banco ainda tem ' + BANCO.length + ' perguntas, por isso este exame tem ' + N + '.</p>' :
+        '<p class="aviso">Versão de demonstração: o banco tem ' + BANCO.length + ' perguntas, ainda em revisão pelos instrutores. Vais ver perguntas repetidas entre simulações.</p>');
+    if (hist.length) {
+      h += '<section class="card"><h2>As tuas últimas simulações</h2><ul class="hist">' + hist.slice(-5).reverse().map(function (r) {
+        return '<li><span>' + esc(new Date(r.data).toLocaleDateString("pt-PT")) + ' · ' + r.certas + ' de ' + r.n + '</span><span class="' + (r.aprovado ? 'ok">Aprovado' : 'bad">Reprovado') + '</span></li>';
+      }).join("") + '</ul></section>';
+    }
+    $("main").innerHTML = h;
+    $("comecar").onclick = comecar;
+    window.scrollTo(0, 0);
+  }
+
+  function comecar() {
+    var qs = escolher(N);
+    EX = {
+      itens: qs.map(function (q) { return { q: q, ordem: baralhar(q.opcoes.map(function (_, i) { return i; })), semente: 1 + Math.floor(Math.random() * 20), resp: null }; }),
+      atual: 0, inicio: Date.now(), fim: Date.now() + FMT.minutos * 60000, entregue: false
+    };
+    $("relogio").hidden = false;
+    clearInterval(tique); tique = setInterval(relogio, 1000); relogio();
+    pergunta(0);
+  }
+
+  function relogio() {
+    if (!EX || EX.entregue) return;
+    var falta = (EX.fim - Date.now()) / 1000;
+    $("relogio").textContent = mmss(falta);
+    $("relogio").classList.toggle("pouco", falta <= 300);
+    if (falta <= 0) entregar(true);
+  }
+
+  function respondidas() { return EX.itens.filter(function (it) { return it.resp !== null; }).length; }
+
+  function pergunta(i) {
+    EX.atual = i;
+    var it = EX.itens[i], q = it.q, n = EX.itens.length, ultima = i === n - 1;
+    var img = svgDe(q, it.semente, i);
+    var h = '<div class="contador"><b>Pergunta ' + (i + 1) + ' de ' + n + '</b><span class="muted">' + respondidas() + ' respondidas</span></div>' +
+      '<div class="barra" aria-hidden="true"><i style="width:' + Math.round(100 * (i + 1) / n) + '%"></i></div>' +
+      (img ? '<div class="img">' + img + '</div>' : '') +
+      '<p class="enun">' + esc(q.enunciado) + '</p><div class="ops" role="group" aria-label="Respostas">' +
+      it.ordem.map(function (orig, k) {
+        return '<button class="op" data-o="' + orig + '" aria-pressed="' + (it.resp === orig) + '"><span class="l">' + LET[k] + '</span><span>' + esc(q.opcoes[orig][0]) + '</span></button>';
+      }).join("") + '</div>' +
+      '<div class="nav"><button id="ant"' + (i === 0 ? ' disabled' : '') + '>‹ Anterior</button><button id="seg" class="' + (ultima ? 'pri' : '') + '">' + (ultima ? 'Rever e entregar' : 'Seguinte ›') + '</button></div>' +
+      '<details class="grelha"><summary>Ver todas as perguntas</summary><div class="nums">' + EX.itens.map(function (x, k) {
+        return '<button class="num' + (x.resp !== null ? ' feita' : '') + (k === i ? ' atual' : '') + '" data-k="' + k + '" aria-label="Pergunta ' + (k + 1) + (x.resp !== null ? ', respondida' : ', por responder') + '">' + (k + 1) + '</button>';
+      }).join("") + '</div></details>' +
+      '<p style="margin:0;text-align:center"><button class="desistir" id="desistir" style="color:var(--soft)">Desistir deste exame</button></p>';
+    $("main").innerHTML = h;
+    Array.prototype.forEach.call(document.querySelectorAll(".op"), function (b) {
+      b.onclick = function () {
+        it.resp = Number(b.getAttribute("data-o"));
+        Array.prototype.forEach.call(document.querySelectorAll(".op"), function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+        document.querySelector(".contador .muted").textContent = respondidas() + " respondidas";
+        var num = document.querySelector('.num[data-k="' + i + '"]'); if (num) num.classList.add("feita");
+      };
+    });
+    $("ant").onclick = function () { if (i > 0) pergunta(i - 1); };
+    $("seg").onclick = function () { if (ultima) rever(); else pergunta(i + 1); };
+    Array.prototype.forEach.call(document.querySelectorAll(".num"), function (b) { b.onclick = function () { pergunta(Number(b.getAttribute("data-k"))); }; });
+    $("desistir").onclick = desistir;
+    window.scrollTo(0, 0);
+  }
+
+  function rever() {
+    var falta = EX.itens.map(function (x, k) { return x.resp === null ? k : -1; }).filter(function (k) { return k >= 0; });
+    var h = '<div><p class="eyebrow">Antes de entregar</p><h1>' + (falta.length === 1 ? 'Falta 1 resposta' : falta.length ? 'Faltam ' + falta.length + ' respostas' : 'Respondeste a todas') + '</h1></div>' +
+      '<section class="card">' + (falta.length ? '<p style="margin:0 0 10px">Perguntas por responder (contam como erradas):</p><div class="nums">' + falta.map(function (k) { return '<button class="num" data-k="' + k + '">' + (k + 1) + '</button>'; }).join("") + '</div>' :
+        '<p style="margin:0">Ainda podes voltar atrás e mudar alguma resposta.</p>') + '</section>' +
+      '<button class="bt pri" id="entregar">Entregar o exame</button><button class="bt sec" id="voltar">Voltar ao exame</button>';
+    $("main").innerHTML = h;
+    Array.prototype.forEach.call(document.querySelectorAll(".num"), function (b) { b.onclick = function () { pergunta(Number(b.getAttribute("data-k"))); }; });
+    $("entregar").onclick = function () { entregar(false); };
+    $("voltar").onclick = function () { pergunta(EX.atual); };
+    window.scrollTo(0, 0);
+  }
+
+  function desistir() {
+    var h = '<section class="card confirma"><h2>Desistir deste exame?</h2><p style="margin:0 0 14px">As respostas perdem-se e a simulação não fica registada.</p>' +
+      '<button class="bt mau" id="sim">Sim, desistir</button><button class="bt sec" id="nao" style="margin-top:10px">Continuar o exame</button></section>';
+    $("main").innerHTML = h;
+    $("sim").onclick = function () { clearInterval(tique); EX = null; inicio(); };
+    $("nao").onclick = function () { pergunta(EX.atual); };
+  }
+
+  function entregar(porTempo) {
+    if (!EX || EX.entregue) return;
+    EX.entregue = true; clearInterval(tique);
+    $("relogio").hidden = true;
+    var n = EX.itens.length, certas = 0, porU = {};
+    EX.itens.forEach(function (it) {
+      it.certa = it.resp !== null && !!it.q.opcoes[it.resp][1];
+      if (it.certa) certas++;
+      var u = unidade(it.q); porU[u] = porU[u] || { c: 0, t: 0 }; porU[u].t++; if (it.certa) porU[u].c++;
+    });
+    var minimo = Math.round(FMT.minimoCertas * n / FMT.perguntas), aprovado = certas >= minimo;
+    var usado = Math.min(FMT.minutos * 60, (Date.now() - EX.inicio) / 1000);
+    var hist = ler("cartax.exames", []); hist.push({ data: new Date().toISOString(), certas: certas, n: n, aprovado: aprovado }); guardar("cartax.exames", hist.slice(-20));
+
+    var h = '<section class="card res ' + (aprovado ? 'ok' : 'bad') + '"><p class="eyebrow" style="color:inherit">' + (porTempo ? 'O tempo acabou' : 'Exame entregue') + '</p><h1>' + (aprovado ? 'Aprovado' : 'Reprovado') + '</h1>' +
+      '<p class="nota"><b>' + certas + ' certas</b> em ' + n + ' · ' + (n - certas) + (n - certas === 1 ? ' erro' : ' erros') + '</p>' +
+      '<p class="muted" style="margin:4px 0 0">Para passar: pelo menos ' + minimo + ' certas. Tempo: ' + mmss(usado) + ' de ' + FMT.minutos + ':00.</p></section>';
+    h += '<section class="card"><h2>Por tema do programa</h2><ul class="uni">' + P.unidades.filter(function (u) { return porU[u.id]; }).map(function (u) {
+      var r = porU[u.id]; return '<li><span>' + esc(u.nome) + '</span><b>' + r.c + ' de ' + r.t + '</b><span class="b"><i style="width:' + Math.round(100 * r.c / r.t) + '%"></i></span></li>';
+    }).join("") + '</ul></section>';
+    var erradas = EX.itens.map(function (it, k) { return { it: it, k: k }; }).filter(function (x) { return !x.it.certa; });
+    h += '<section><h2>' + (erradas.length ? 'As respostas que falhaste' : 'Não falhaste nenhuma!') + '</h2><div style="display:flex;flex-direction:column;gap:12px">' + erradas.map(cartaoErro).join("") + '</div></section>';
+    h += '<button class="bt pri" id="nova">Fazer outra simulação</button><button class="bt sec" id="todas">Ver também as que acertaste</button><div id="certas" style="display:flex;flex-direction:column;gap:12px"></div>';
+    $("main").innerHTML = h;
+    $("nova").onclick = function () { EX = null; inicio(); };
+    $("todas").onclick = function () {
+      $("certas").innerHTML = EX.itens.map(function (it, k) { return { it: it, k: k }; }).filter(function (x) { return x.it.certa; }).map(cartaoErro).join("");
+      $("todas").hidden = true;
+    };
+    window.scrollTo(0, 0);
+  }
+
+  function cartaoErro(x) {
+    var it = x.it, q = it.q, ex = E[q.id] || {}, img = svgDe(q, it.semente, "r" + x.k);
+    var letra = function (orig) { return LET[it.ordem.indexOf(orig)]; };
+    var certaOrig = q.opcoes.findIndex(function (o) { return o[1]; });
+    var h = '<article class="card erro' + (it.certa ? ' certa' : '') + '"><p class="q">' + (x.k + 1) + '. ' + esc(q.enunciado) + '</p>' + (img ? '<div class="img mini">' + img + '</div>' : '');
+    if (!it.certa) {
+      h += it.resp === null ? '<div class="linha tua"><b>Ficou por responder</b></div>' :
+        '<div class="linha tua"><b>A tua resposta</b>' + letra(it.resp) + ') ' + esc(q.opcoes[it.resp][0]) + (ex.erradas && ex.erradas[it.resp] ? '<div class="tutor"><b>Porque está errada</b>' + esc(ex.erradas[it.resp]) + '</div>' : '') + '</div>';
+    }
+    h += '<div class="linha boa"><b>' + (it.certa ? 'Acertaste' : 'Resposta certa') + '</b>' + letra(certaOrig) + ') ' + esc(q.opcoes[certaOrig][0]) + '</div>';
+    if (ex.explicacao) h += '<p style="margin:10px 0 0">' + esc(ex.explicacao) + '</p>';
+    if (ex.artigo && !/confirmar/i.test(ex.artigo)) h += '<span class="art">' + esc(ex.artigo) + '</span>';
+    if (ex.exemplo && !it.certa) h += '<details class="ex"><summary>Dá-me um exemplo</summary><p style="margin:6px 0 0">' + esc(ex.exemplo) + '</p></details>';
+    return h + '</article>';
+  }
+
+  inicio();
+})();
+</script>
+</body>
+</html>
