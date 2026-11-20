@@ -32,7 +32,12 @@
   .opts li{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px}
   .opts li.certa{border-color:var(--ok);background:var(--ok-bg)}
   .letra{font-weight:700;color:var(--soft);min-width:1.2em}
-  .opts .txt{flex:1;min-width:0}
+  .opts li{flex-wrap:wrap}
+  .opts .txt{flex:1 1 200px;min-width:0}
+  .ajuda{margin-top:8px;padding:8px 12px;border-left:3px solid var(--blue);background:var(--blue-bg);border-radius:0 8px 8px 0;font-size:15px}
+  .ajuda b{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--blue)}
+  .exemplo{border-left:4px solid var(--blue)}
+  .exemplo .btn-fake{display:inline-block;font-family:'Barlow Condensed',Arial,sans-serif;font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);border-radius:8px;padding:3px 10px;color:var(--soft);margin-bottom:8px}
   .pill{display:inline-block;font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;white-space:nowrap}
   .pill.ok{background:var(--ok);color:#fff}
   .pill.warn{background:var(--warn-bg);color:var(--warn);border:1px solid #E8CF97}
@@ -112,7 +117,7 @@
     $("nav").hidden = true;
     var temas = [];
     L.forEach(function (q) { var t = temas.find(function (x) { return x.nome === q.tema; }); if (!t) temas.push(t = { nome: q.tema, qs: [] }); t.qs.push(q); });
-    var h = '<div><p class="eyebrow">Banco de perguntas v0.1</p><h1>Perguntas para rever</h1><p class="muted">' + L.length + ' perguntas com cena. Escolhe uma para ver a pergunta, as respostas, a explicação e as 20 cenas.</p></div><div class="lista">';
+    var h = '<div><p class="eyebrow">Banco de perguntas v0.1</p><h1>Perguntas para rever</h1><p class="muted">' + L.length + ' perguntas com cena. Escolhe uma para ver a pergunta, as respostas com as ajudas do tutor, a explicação e as 20 cenas.</p></div><div class="lista">';
     temas.forEach(function (t) {
       h += '<section><h2>' + esc(t.nome) + '</h2><div class="items">';
       t.qs.forEach(function (q) { h += '<a href="?q=' + encodeURIComponent(q.id) + '"><b>' + esc(q.id) + '</b><span>' + esc(q.enunciado) + '</span></a>'; });
@@ -131,13 +136,16 @@
     var artPill = /confirmar/i.test(art) ? '<span class="pill warn">A confirmar pelo instrutor</span>' : (/boa prática/i.test(art) ? '<span class="pill info">Boa prática</span>' : '');
 
     var h = '<div><p class="eyebrow">Pergunta ' + esc(q.id) + ' · ' + esc(q.tema) + '</p><h1>' + esc(q.enunciado) + '</h1></div>';
-    h += '<section class="card"><h2>Respostas</h2><ul class="opts">';
+    var erradas = ex.erradas || {};
+    h += '<section class="card"><h2>Respostas e ajudas do tutor</h2><p class="cap" style="margin:-4px 0 12px">Por baixo de cada resposta errada está o que a app mostra a quem a escolher. Versão para escolas, com os termos do Código da Estrada.</p><ul class="opts">';
     q.opcoes.forEach(function (o, k) {
-      h += '<li class="' + (o[1] ? "certa" : "") + '"><span class="letra">' + "ABCDE"[k] + '</span><span class="txt">' + esc(o[0]) + '</span>' + (o[1] ? '<span class="pill ok">✓ Resposta certa</span>' : '') + '</li>';
+      var ajuda = o[1] ? '' : '<div class="ajuda"><b>Se o aluno escolher esta</b>' + esc(erradas[k] || "Por escrever.") + '</div>';
+      h += '<li class="' + (o[1] ? "certa" : "") + '"><span class="letra">' + "ABCDE"[k] + '</span><div class="txt">' + esc(o[0]) + ajuda + '</div>' + (o[1] ? '<span class="pill ok">✓ Resposta certa</span>' : '') + '</li>';
     });
     h += '</ul></section>';
     h += '<div class="grid2"><section class="card"><h2>Explicação</h2><p style="margin:0">' + esc(ex.explicacao || "Por escrever.") + '</p></section>';
     h += '<section class="card"><h2>Artigo do Código da Estrada</h2><p style="margin:0 0 8px">' + esc(art) + '</p>' + artPill + '</section></div>';
+    h += '<section class="card exemplo"><h2>Exemplo</h2><span class="btn-fake">Dá-me um exemplo</span><p style="margin:0">' + esc(ex.exemplo || "Por escrever.") + '</p><p class="cap">Aparece quando o aluno, depois de errar, carrega neste botão.</p></section>';
 
     var v = C.verificar(q.cena);
     h += '<section class="card"><h2>Cena</h2><div class="cena-main"><div><div class="big" id="big"></div><p class="cap" id="cap"></p></div><div><h2 style="font-size:19px">O que tem de aparecer</h2><ul class="crit">';
@@ -147,7 +155,7 @@
     h += '</ul><p class="cap">✓ = a app confirmou que está no desenho. O instrutor confirma com os próprios olhos.</p></div></div>';
     h += '<h2 style="font-size:19px;margin-top:18px">As 20 variantes que o aluno pode ver</h2><p class="cap" style="margin:-6px 0 10px">' + (v.variacoes ? 'Nesta pergunta muda também a posição ou o sentido dos outros veículos, só dentro do que a regra permite: a resposta certa é a mesma em todas.' : 'Mudam as cores, a hora do dia e o piso. A estrada e a regra são sempre as mesmas.') + '</p><div class="thumbs" id="thumbs"></div></section>';
 
-    h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação está certa e fácil de perceber.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li><li>As cenas mostram a situação e tudo o que tem de aparecer.</li></ol><p class="muted" style="margin:12px 0 0">Na folha de revisão: marcar <b style="color:#F5F3EE">OK</b> ou <b style="color:#F5F3EE">Corrigir</b>, com um comentário.</p></section>';
+    h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação, a ajuda de cada resposta errada e o exemplo estão certos e usam os termos do Código.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li><li>As cenas mostram a situação e tudo o que tem de aparecer.</li></ol><p class="muted" style="margin:12px 0 0">Na folha de revisão: marcar <b style="color:#F5F3EE">OK</b> ou <b style="color:#F5F3EE">Corrigir</b>, com um comentário.</p></section>';
     $("main").innerHTML = h;
 
     function mostrar(s) {
