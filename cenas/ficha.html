@@ -72,6 +72,28 @@
   .lista a:hover{border-color:var(--blue)}
   .lista a b{color:var(--blue);min-width:2.2em}
   .lista .items{display:flex;flex-direction:column;gap:8px}
+  .rev{border:2px solid var(--blue)}
+  .rev-l{display:block;font-weight:700;font-size:15px;margin:12px 0 6px}
+  .rev-l span{font-weight:400;color:var(--soft)}
+  .rev-in{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#FBFAF7;color:var(--ink)}
+  .rev-in:focus,.rev-bt:focus-visible,.rev-env:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  .rev-bts{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .rev-bt{flex:1 1 140px;font:inherit;font-weight:700;padding:12px;border-radius:10px;cursor:pointer;background:#fff}
+  .rev-bt.ok{border:2px solid var(--ok);color:var(--ok)}
+  .rev-bt.warn{border:2px solid #C9952B;color:var(--warn)}
+  .rev-bt.ok[aria-pressed="true"]{background:var(--ok);color:#fff}
+  .rev-bt.warn[aria-pressed="true"]{background:#C9952B;color:#fff}
+  .rev-env{margin-top:14px;width:100%;font:inherit;font-weight:700;font-size:18px;padding:12px;border:none;border-radius:10px;background:var(--blue);color:#fff;cursor:pointer}
+  .rev-env:disabled{background:#B9C3D3;cursor:default}
+  .rev-msg{margin:10px 0 0;font-weight:700}
+  .rev-msg:empty{display:none}
+  .rev-msg a{color:var(--blue)}
+  .rev-msg.ok,.rev-antes.ok{color:var(--ok)}
+  .rev-msg.warn,.rev-antes.warn{color:var(--warn)}
+  .rev-antes{margin:0 0 4px;font-size:15px}
+  .lista .estado{font-style:normal;font-size:13px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
+  .lista .estado.ok{background:var(--ok-bg);color:var(--ok)}
+  .lista .estado.warn{background:var(--warn-bg);color:var(--warn)}
   .lista .tag{font-style:normal;font-size:13px;font-weight:700;color:var(--warn);background:var(--warn-bg);border-radius:999px;padding:1px 8px;white-space:nowrap}
   footer{font-size:14px;color:var(--soft);text-align:center;padding:0 16px 32px}
 </style>
@@ -94,6 +116,7 @@
 <script src="banco.js"></script>
 <script src="perguntas_sem_cena.js"></script>
 <script src="explicacoes.js"></script>
+<script src="revisao-config.js"></script>
 <script>
 (function () {
   var C = window.CartaXCenas, B = window.CartaXBanco, E = window.CartaXExplicacoes || {};
@@ -119,16 +142,93 @@
   }
   function ids(svg, n) { return svg.replace(/brilhoAzul/g, "brilhoAzul" + n); }
 
+  /* ---------- Revisão: aprovar ou pedir correção ---------- */
+  var CFG = window.CartaXRevisao || { acao: "", campos: {} };
+  var ligado = !!(CFG.acao && CFG.campos && CFG.campos.pergunta && CFG.campos.decisao);
+  function guardar(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function ler(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function versao(q, ex) {
+    var t = JSON.stringify([q.enunciado, q.opcoes, ex.explicacao, ex.artigo, ex.erradas, ex.exemplo]), h = 5381;
+    for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0;
+    return ("000000" + h.toString(16)).slice(-6);
+  }
+  function quando(iso) {
+    var d = new Date(iso), z = function (n) { return (n < 10 ? "0" : "") + n; };
+    return z(d.getDate()) + "/" + z(d.getMonth() + 1) + " às " + z(d.getHours()) + ":" + z(d.getMinutes());
+  }
+  function estadoAnterior(q, ex) {
+    var r = ler("cartax.revisoes", {})[q.id];
+    if (!r) return "";
+    var mudou = r.versao !== versao(q, ex);
+    return '<p class="rev-antes ' + (r.decisao === "Aprovada" ? "ok" : "warn") + '">' + (r.decisao === "Aprovada" ? "✓ Aprovaste" : "✎ Pediste correção") + ' a ' + esc(quando(r.data)) + '.' + (mudou ? ' <b>O texto mudou desde então: revê outra vez.</b>' : ' Se enviares outra revisão, fica a mais recente.') + '</p>';
+  }
+  function painelRevisao(q, ex) {
+    return '<section class="card rev" id="rev"><h2>A tua revisão</h2>' + estadoAnterior(q, ex) +
+      '<label class="rev-l" for="rev-nome">O teu nome</label><input id="rev-nome" class="rev-in" autocomplete="name" placeholder="Ex.: Ana Silva">' +
+      '<div class="rev-bts" role="group" aria-label="Decisão"><button type="button" class="rev-bt ok" data-d="Aprovada" aria-pressed="false">✓ Aprovar</button><button type="button" class="rev-bt warn" data-d="Corrigir" aria-pressed="false">✎ Pedir correção</button></div>' +
+      '<label class="rev-l" for="rev-com">Comentário <span id="rev-obr">(opcional)</span></label><textarea id="rev-com" class="rev-in" rows="3" placeholder="O que está mal e como deve ficar."></textarea>' +
+      '<button type="button" id="rev-env" class="rev-env" disabled>Enviar revisão</button><p class="rev-msg" id="rev-msg" role="status"></p>' +
+      '<p class="cap">' + (ligado ? 'A revisão fica registada na folha da CartaX, com o teu nome, a data e a versão do texto.' : 'Modo de demonstração: a folha ainda não está ligada, por isso a revisão fica guardada só neste aparelho.') + ' Versão do texto: <code>' + versao(q, ex) + '</code></p></section>';
+  }
+  function ligarRevisao(q, ex) {
+    var nome = $("rev-nome"), com = $("rev-com"), env = $("rev-env"), msg = $("rev-msg"), dec = "";
+    nome.value = ler("cartax.revisor", "");
+    function pronto() {
+      var precisa = dec === "Corrigir";
+      $("rev-obr").textContent = precisa ? "(obrigatório)" : "(opcional)";
+      env.disabled = !(nome.value.trim() && dec && (!precisa || com.value.trim()));
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".rev-bt"), function (b) {
+      b.onclick = function () {
+        dec = b.getAttribute("data-d");
+        Array.prototype.forEach.call(document.querySelectorAll(".rev-bt"), function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+        if (dec === "Corrigir") com.focus();
+        pronto();
+      };
+    });
+    nome.oninput = pronto; com.oninput = pronto;
+    env.onclick = function () {
+      var agora = new Date().toISOString(), v = versao(q, ex);
+      var reg = { decisao: dec, data: agora, versao: v };
+      function feito() {
+        var todas = ler("cartax.revisoes", {}); todas[q.id] = reg; guardar("cartax.revisoes", todas);
+        guardar("cartax.revisor", nome.value.trim());
+        msg.className = "rev-msg ok";
+        msg.textContent = (dec === "Aprovada" ? "Aprovação enviada" : "Pedido de correção enviado") + " a " + quando(agora) + ". Obrigado!";
+        env.disabled = true; com.value = "";
+        var i = L.findIndex(function (x) { return x.id === q.id; });
+        if (i < L.length - 1) { msg.innerHTML += ' <a href="?q=' + encodeURIComponent(L[i + 1].id) + '">Pergunta seguinte →</a>'; }
+      }
+      if (!ligado) { feito(); return; }
+      env.disabled = true; msg.className = "rev-msg"; msg.textContent = "A enviar…";
+      var c = CFG.campos, dados = new URLSearchParams();
+      dados.append(c.pergunta, q.id); dados.append(c.decisao, dec);
+      if (c.comentario) dados.append(c.comentario, com.value.trim());
+      if (c.revisor) dados.append(c.revisor, nome.value.trim());
+      if (c.versao) dados.append(c.versao, v);
+      fetch(CFG.acao, { method: "POST", mode: "no-cors", body: dados }).then(feito, function () {
+        msg.className = "rev-msg warn"; msg.textContent = "Não foi possível enviar. Verifica a ligação à internet e tenta outra vez.";
+        env.disabled = false;
+      });
+    };
+  }
+
   function lista() {
     $("nav").hidden = true;
-    var temas = [];
+    var temas = [], revs = ler("cartax.revisoes", {});
+    var feitas = L.filter(function (q) { return revs[q.id]; }).length;
     L.forEach(function (q) { var t = temas.find(function (x) { return x.nome === q.tema; }); if (!t) temas.push(t = { nome: q.tema, qs: [] }); t.qs.push(q); });
     var h = '<div><p class="eyebrow">Banco de perguntas v0.1</p><h1>Perguntas para rever</h1><p class="muted">' + L.length + ' perguntas: ' + comCena + ' com cena desenhada e ' + (L.length - comCena) + ' sem cena. Escolhe uma para ver a pergunta, as respostas com as ajudas do tutor, a explicação e a imagem.</p></div><div class="lista">';
     temas.forEach(function (t) {
       h += '<section><h2>' + esc(t.nome) + '</h2><div class="items">';
-      t.qs.forEach(function (q) { h += '<a href="?q=' + encodeURIComponent(q.id) + '"><b>' + esc(q.id) + '</b><span>' + esc(q.enunciado) + (q.cena ? '' : ' <em class="tag">' + (/^sem cena/i.test(q.imagem || "") ? 'sem imagem' : 'fotografia por fazer') + '</em>') + '</span></a>'; });
+      t.qs.forEach(function (q) {
+        var r = revs[q.id], est = '';
+        if (r) est = ' <em class="estado ' + (r.decisao === "Aprovada" ? 'ok">✓ aprovada' : 'warn">✎ correção pedida') + '</em>';
+        h += '<a href="?q=' + encodeURIComponent(q.id) + '"><b>' + esc(q.id) + '</b><span>' + esc(q.enunciado) + (q.cena ? '' : ' <em class="tag">' + (/^sem cena/i.test(q.imagem || "") ? 'sem imagem' : 'fotografia por fazer') + '</em>') + est + '</span></a>';
+      });
       h += '</div></section>';
     });
+    if (feitas) h = h.replace('<div class="lista">', '<p class="rev-antes ok" style="margin:0">Revistas neste aparelho: ' + feitas + ' de ' + L.length + '.</p><div class="lista">');
     $("main").innerHTML = h + '</div>';
   }
 
@@ -158,8 +258,10 @@
       h += '<section class="card"><h2>Imagem</h2>' + (semImg
         ? '<p style="margin:0">Sem imagem: é uma pergunta de conhecimento.</p>'
         : '<p style="margin:0 0 8px"><span class="pill warn">Fotografia por fazer</span></p><p style="margin:0"><b>Previsto:</b> ' + esc((q.imagem || "").replace(/^Fotografia IA\s*·\s*/i, "")) + '</p><p class="cap">A fotografia é revista à parte, quando estiver feita.</p>') + '</section>';
-      h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação, a ajuda de cada resposta errada e o exemplo estão certos e usam os termos do Código.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li>' + (semImg ? '' : '<li>A fotografia prevista mostra a situação da pergunta.</li>') + '</ol><p class="muted" style="margin:12px 0 0">Na folha de revisão: marcar <b style="color:#F5F3EE">OK</b> ou <b style="color:#F5F3EE">Corrigir</b>, com um comentário.</p></section>';
+      h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação, a ajuda de cada resposta errada e o exemplo estão certos e usam os termos do Código.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li>' + (semImg ? '' : '<li>A fotografia prevista mostra a situação da pergunta.</li>') + '</ol><p class="muted" style="margin:12px 0 0">Depois de ver tudo, aprova ou pede correção logo abaixo.</p></section>';
+    h += painelRevisao(q, ex);
       $("main").innerHTML = h;
+      ligarRevisao(q, ex);
       return;
     }
 
@@ -171,8 +273,10 @@
     h += '</ul><p class="cap">✓ = a app confirmou que está no desenho. O instrutor confirma com os próprios olhos.</p></div></div>';
     h += '<h2 style="font-size:19px;margin-top:18px">As 20 variantes que o aluno pode ver</h2><p class="cap" style="margin:-6px 0 10px">' + (v.variacoes ? 'Nesta pergunta muda também a posição ou o sentido dos outros veículos, só dentro do que a regra permite: a resposta certa é a mesma em todas.' : 'Mudam as cores, a hora do dia e o piso. A estrada e a regra são sempre as mesmas.') + '</p><div class="thumbs" id="thumbs"></div></section>';
 
-    h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação, a ajuda de cada resposta errada e o exemplo estão certos e usam os termos do Código.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li><li>As cenas mostram a situação e tudo o que tem de aparecer.</li></ol><p class="muted" style="margin:12px 0 0">Na folha de revisão: marcar <b style="color:#F5F3EE">OK</b> ou <b style="color:#F5F3EE">Corrigir</b>, com um comentário.</p></section>';
+    h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação, a ajuda de cada resposta errada e o exemplo estão certos e usam os termos do Código.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li><li>As cenas mostram a situação e tudo o que tem de aparecer.</li></ol><p class="muted" style="margin:12px 0 0">Depois de ver tudo, aprova ou pede correção logo abaixo.</p></section>';
+    h += painelRevisao(q, ex);
     $("main").innerHTML = h;
+    ligarRevisao(q, ex);
 
     function mostrar(s) {
       sel = s;
