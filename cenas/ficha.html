@@ -72,6 +72,7 @@
   .lista a:hover{border-color:var(--blue)}
   .lista a b{color:var(--blue);min-width:2.2em}
   .lista .items{display:flex;flex-direction:column;gap:8px}
+  .lista .tag{font-style:normal;font-size:13px;font-weight:700;color:var(--warn);background:var(--warn-bg);border-radius:999px;padding:1px 8px;white-space:nowrap}
   footer{font-size:14px;color:var(--soft);text-align:center;padding:0 16px 32px}
 </style>
 </head>
@@ -91,11 +92,16 @@
 
 <script src="desenhador.js"></script>
 <script src="banco.js"></script>
+<script src="perguntas_sem_cena.js"></script>
 <script src="explicacoes.js"></script>
 <script>
 (function () {
   var C = window.CartaXCenas, B = window.CartaXBanco, E = window.CartaXExplicacoes || {};
-  var L = Array.isArray(B) ? B : (B.perguntas || []);
+  var num = function (id) { return id.split(".").map(Number); };
+  var L = (Array.isArray(B) ? B : (B.perguntas || [])).concat(window.CartaXSemCena || []).sort(function (a, b) {
+    var x = num(a.id), y = num(b.id); return x[0] - y[0] || x[1] - y[1];
+  });
+  var comCena = L.filter(function (q) { return q.cena; }).length;
   var AMB = { dia: "Dia", fim_tarde: "Fim de tarde", nublado: "Nublado", piso_molhado: "Piso molhado" };
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
@@ -117,10 +123,10 @@
     $("nav").hidden = true;
     var temas = [];
     L.forEach(function (q) { var t = temas.find(function (x) { return x.nome === q.tema; }); if (!t) temas.push(t = { nome: q.tema, qs: [] }); t.qs.push(q); });
-    var h = '<div><p class="eyebrow">Banco de perguntas v0.1</p><h1>Perguntas para rever</h1><p class="muted">' + L.length + ' perguntas com cena. Escolhe uma para ver a pergunta, as respostas com as ajudas do tutor, a explicação e as 20 cenas.</p></div><div class="lista">';
+    var h = '<div><p class="eyebrow">Banco de perguntas v0.1</p><h1>Perguntas para rever</h1><p class="muted">' + L.length + ' perguntas: ' + comCena + ' com cena desenhada e ' + (L.length - comCena) + ' sem cena. Escolhe uma para ver a pergunta, as respostas com as ajudas do tutor, a explicação e a imagem.</p></div><div class="lista">';
     temas.forEach(function (t) {
       h += '<section><h2>' + esc(t.nome) + '</h2><div class="items">';
-      t.qs.forEach(function (q) { h += '<a href="?q=' + encodeURIComponent(q.id) + '"><b>' + esc(q.id) + '</b><span>' + esc(q.enunciado) + '</span></a>'; });
+      t.qs.forEach(function (q) { h += '<a href="?q=' + encodeURIComponent(q.id) + '"><b>' + esc(q.id) + '</b><span>' + esc(q.enunciado) + (q.cena ? '' : ' <em class="tag">' + (/^sem cena/i.test(q.imagem || "") ? 'sem imagem' : 'fotografia por fazer') + '</em>') + '</span></a>'; });
       h += '</div></section>';
     });
     $("main").innerHTML = h + '</div>';
@@ -146,6 +152,16 @@
     h += '<div class="grid2"><section class="card"><h2>Explicação</h2><p style="margin:0">' + esc(ex.explicacao || "Por escrever.") + '</p></section>';
     h += '<section class="card"><h2>Artigo do Código da Estrada</h2><p style="margin:0 0 8px">' + esc(art) + '</p>' + artPill + '</section></div>';
     h += '<section class="card exemplo"><h2>Exemplo</h2><span class="btn-fake">Dá-me um exemplo</span><p style="margin:0">' + esc(ex.exemplo || "Por escrever.") + '</p><p class="cap">Aparece quando o aluno, depois de errar, carrega neste botão.</p></section>';
+
+    if (!q.cena) {
+      var semImg = /^sem cena/i.test(q.imagem || "");
+      h += '<section class="card"><h2>Imagem</h2>' + (semImg
+        ? '<p style="margin:0">Sem imagem: é uma pergunta de conhecimento.</p>'
+        : '<p style="margin:0 0 8px"><span class="pill warn">Fotografia por fazer</span></p><p style="margin:0"><b>Previsto:</b> ' + esc((q.imagem || "").replace(/^Fotografia IA\s*·\s*/i, "")) + '</p><p class="cap">A fotografia é revista à parte, quando estiver feita.</p>') + '</section>';
+      h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação, a ajuda de cada resposta errada e o exemplo estão certos e usam os termos do Código.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li>' + (semImg ? '' : '<li>A fotografia prevista mostra a situação da pergunta.</li>') + '</ol><p class="muted" style="margin:12px 0 0">Na folha de revisão: marcar <b style="color:#F5F3EE">OK</b> ou <b style="color:#F5F3EE">Corrigir</b>, com um comentário.</p></section>';
+      $("main").innerHTML = h;
+      return;
+    }
 
     var v = C.verificar(q.cena);
     h += '<section class="card"><h2>Cena</h2><div class="cena-main"><div><div class="big" id="big"></div><p class="cap" id="cap"></p></div><div><h2 style="font-size:19px">O que tem de aparecer</h2><ul class="crit">';
