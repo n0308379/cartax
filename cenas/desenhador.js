@@ -8,7 +8,7 @@
 (function (global) {
   "use strict";
 
-  var VERSAO = "0.4.0";
+  var VERSAO = "0.4.1";
   var W = 1000, H = 1000;
   var BRANCO = "#f3f1ea";
 
@@ -120,12 +120,12 @@
       return { x: RC.x - R * Math.cos(rad(a)), y: RC.y + R * Math.sin(rad(a)), rumo: -a };
     }
     var lugares = {
-      faixa_esquerda: linha(410, 960, 410, 40, "faixa da esquerda"),
-      faixa_central: linha(510, 960, 510, 40, "faixa central"),
-      faixa_direita: linha(610, 960, 610, 40, "faixa da direita"),
+      faixa_esquerda: linha(410, 960, 410, 40, "via de trânsito da esquerda"),
+      faixa_central: linha(510, 960, 510, 40, "via de trânsito do meio"),
+      faixa_direita: linha(610, 960, 610, 40, "via de trânsito da direita"),
       via_aceleracao: linha(710, 610, 710, 320, "via de aceleração"),
       ramal: { tipo: "curva", ponto: pontoRamal, nome: "ramal de entrada" },
-      sentido_contrario: linha(170, 40, 170, 960, "faixa do sentido contrário")
+      sentido_contrario: linha(170, 40, 170, 960, "faixa de rodagem do sentido contrário")
     };
     function arco(raio) { return "M" + RC.x + " " + (RC.y + raio) + " A" + raio + " " + raio + " 0 0 1 " + (RC.x - raio) + " " + RC.y; }
     function estrada(amb) {
@@ -401,8 +401,8 @@
   /* Rua urbana com passadeira: 2 sentidos (rua) ou 2 faixas no mesmo sentido (avenida) */
   function pecaRua(sentidoUnico) {
     var lugares = sentidoUnico ? {
-      faixa_esquerda: linha(450, 960, 450, 40, "faixa da esquerda"),
-      faixa_direita: linha(550, 960, 550, 40, "faixa da direita")
+      faixa_esquerda: linha(450, 960, 450, 40, "via de trânsito da esquerda"),
+      faixa_direita: linha(550, 960, 550, 40, "via de trânsito da direita")
     } : {
       via: linha(550, 960, 550, 40, "via (sentido de marcha para cima)"),
       sentido_contrario: linha(450, 40, 450, 960, "via do sentido contrário"),
@@ -425,7 +425,7 @@
       return s.join("");
     }
     function livre(x, y) { return Math.abs(x - 500) > 210; }
-    return { lugares: lugares, estrada: estrada, livre: livre, nome: sentidoUnico ? "Passadeira em avenida de 2 faixas" : "Passadeira em rua de 2 sentidos", parametros: [] };
+    return { lugares: lugares, estrada: estrada, livre: livre, nome: sentidoUnico ? "Passadeira em avenida de 2 vias de trânsito" : "Passadeira em rua de 2 sentidos", parametros: [] };
   }
   PECAS.passadeira_rua = pecaRua(false);
   PECAS.passadeira_avenida = pecaRua(true);
@@ -433,10 +433,10 @@
   /* Troço de autoestrada: 3 faixas por sentido, sem entradas */
   PECAS.troco_autoestrada = (function () {
     var lugares = {
-      faixa_esquerda: linha(410, 960, 410, 40, "faixa da esquerda"),
-      faixa_central: linha(510, 960, 510, 40, "faixa central"),
-      faixa_direita: linha(610, 960, 610, 40, "faixa da direita"),
-      sentido_contrario: linha(170, 40, 170, 960, "faixa do sentido contrário")
+      faixa_esquerda: linha(410, 960, 410, 40, "via de trânsito da esquerda"),
+      faixa_central: linha(510, 960, 510, 40, "via de trânsito do meio"),
+      faixa_direita: linha(610, 960, 610, 40, "via de trânsito da direita"),
+      sentido_contrario: linha(170, 40, 170, 960, "faixa de rodagem do sentido contrário")
     };
     function estrada(amb) {
       var a = amb.asfalto, s = [];
@@ -780,11 +780,11 @@
     if (/saida destacada/.test(t) && !cena.saida_destacada) msgs.push("Refere uma saída destacada, mas a cena não tem nenhuma.");
     // lugares
     var LUG = [[/via de aceleracao/, "via_aceleracao"], [/\bramal\b/, "ramal"], [/via interior/, "via_interior"], [/via exterior/, "via_exterior"],
-      [/faixa da direita/, ["faixa_direita"]], [/faixa da esquerda/, ["faixa_esquerda"]], [/faixa central/, ["faixa_central"]]];
+      [/(?:faixa|via de transito) da direita/, ["faixa_direita"], "a via de trânsito da direita"], [/(?:faixa|via de transito) da esquerda/, ["faixa_esquerda"], "a via de trânsito da esquerda"], [/faixa central|via de transito (?:central|do meio)/, ["faixa_central"], "a via de trânsito do meio"]];
     var livre = /\blivre\b/.test(t);
     LUG.forEach(function (p) {
       if (!p[0].test(t)) return;
-      var ids = [].concat(p[1]), nome = p[0].source.replace(/\\b/g, ""), ocupado = cs.some(function (e) { return ids.indexOf(e.lugar) >= 0; });
+      var ids = [].concat(p[1]), nome = p[2] || p[0].source.replace(/\\b/g, ""), ocupado = cs.some(function (e) { return ids.indexOf(e.lugar) >= 0; });
       if (livre && ocupado) msgs.push("Diz que " + nome + " está livre, mas há um elemento lá.");
       if (!livre && !ocupado) msgs.push("Refere " + nome + ", mas nenhum elemento está lá.");
     });
@@ -792,8 +792,8 @@
     if (tu) {
       var rel = outros.map(function (o) { return { o: o, r: relativo(tu, o) }; });
       var vir = /\bvir\b|\bvem\b|\bvindo\b|aproxima|pela tua (direita|esquerda)|da tua (direita|esquerda)/.test(t);
-      if (/\bdireita\b/.test(t) && vir && !/faixa da direita|via da direita|berma direita|passeio direito/.test(t) && !rel.some(function (x) { return x.r.lado > 60; })) msgs.push("Diz que vem um veículo da direita, mas na cena não há nenhum à direita do aluno.");
-      if (/\besquerda\b/.test(t) && vir && !/faixa da esquerda|pisca esquerdo/.test(t) && !rel.some(function (x) { return x.r.lado < -60; })) msgs.push("Diz que vem um veículo da esquerda, mas na cena não há nenhum à esquerda do aluno.");
+      if (/\bdireita\b/.test(t) && vir && !/faixa da direita|via (?:de transito )?da direita|berma direita|passeio direito/.test(t) && !rel.some(function (x) { return x.r.lado > 60; })) msgs.push("Diz que vem um veículo da direita, mas na cena não há nenhum à direita do aluno.");
+      if (/\besquerda\b/.test(t) && vir && !/faixa da esquerda|via (?:de transito )?da esquerda|pisca esquerdo/.test(t) && !rel.some(function (x) { return x.r.lado < -60; })) msgs.push("Diz que vem um veículo da esquerda, mas na cena não há nenhum à esquerda do aluno.");
       var contrario = outros.some(function (o) { var d = Math.abs(((o.rumo - tu.rumo) % 360 + 540) % 360 - 180); return d > 150; });
       if (/sentido contrario/.test(t) && !livre && !contrario) msgs.push("Refere um veículo em sentido contrário, mas não há nenhum.");
       if (/sentido contrario/.test(t) && livre && contrario) msgs.push("Diz que o sentido contrário está livre, mas há um veículo nele.");

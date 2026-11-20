@@ -80,32 +80,32 @@
 
     /* ---------- Tema 3 — Autoestrada ---------- */
     { id: "3.1", tema: "Autoestrada",
-      enunciado: "Estás na via de aceleração para entrar na autoestrada. Um ligeiro circula na faixa da direita, ao teu lado. O que fazes?",
+      enunciado: "Estás na via de aceleração para entrar na autoestrada. Um ligeiro circula na via de trânsito da direita, ao teu lado. O que fazes?",
       opcoes: [C("Cedes-lhe a passagem e entras atrás dele", 1), C("Entras, porque estás à direita dele"), C("Paras no fim da via de aceleração")],
       cena: { peca: "entrada_autoestrada", elementos: [
         { id: "tu", tipo: "ligeiro", lugar: "via_aceleracao", avanco: 0.5, tu: true, estado: { pisca: "esquerdo" } },
         { id: "lado", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "tu", posicao: "ao_lado" }],
-        elementos_criticos: ["tu na via de aceleração", "ligeiro na faixa da direita, ao teu lado"] } },
+        elementos_criticos: ["tu na via de aceleração", "ligeiro na via de trânsito da direita, ao teu lado"] } },
     { id: "3.2", tema: "Autoestrada",
       enunciado: "Para que serve a via de aceleração?",
-      opcoes: [C("Para ganhar velocidade e entrar quando houver espaço na faixa da direita", 1), C("Para circular como uma faixa extra até à saída seguinte"), C("Para entrar à mesma velocidade do ramal")],
+      opcoes: [C("Para ganhar velocidade e entrar quando houver espaço na via de trânsito da direita", 1), C("Para circular como mais uma via de trânsito até à saída seguinte"), C("Para entrar à mesma velocidade do ramal")],
       cena: { peca: "entrada_autoestrada", elementos: [
         { id: "tu", tipo: "ligeiro", lugar: "via_aceleracao", avanco: 0.3, tu: true, estado: { pisca: "esquerdo" } }],
         elementos_criticos: ["tu na via de aceleração", "via de aceleração a terminar à frente"] } },
     { id: "3.4", tema: "Autoestrada",
-      enunciado: "Circulas na faixa da direita e vês um ligeiro na via de aceleração, a preparar-se para entrar. O que é mais seguro fazer?",
-      opcoes: [C("Se for seguro, passar para a faixa do meio e facilitar a entrada", 1), C("Acelerar para ele não entrar à tua frente"), C("Travar a fundo para o deixar entrar")],
+      enunciado: "Circulas na via de trânsito da direita e vês um ligeiro na via de aceleração, a preparar-se para entrar. O que é mais seguro fazer?",
+      opcoes: [C("Se for seguro, passar para a via de trânsito do meio e facilitar a entrada", 1), C("Acelerar para ele não entrar à tua frente"), C("Travar a fundo para o deixar entrar")],
       cena: { peca: "entrada_autoestrada", elementos: [
         { id: "entra", tipo: "ligeiro", lugar: "via_aceleracao", avanco: 0.55, estado: { pisca: "esquerdo" } },
         { id: "tu", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "entra", posicao: "atras", tu: true }],
-        elementos_criticos: ["tu na faixa da direita", "ligeiro na via de aceleração, à tua frente, com pisca esquerdo", "faixa central livre"] } },
+        elementos_criticos: ["tu na via de trânsito da direita", "ligeiro na via de aceleração, à tua frente, com pisca esquerdo", "via de trânsito do meio livre"] } },
     { id: "3.5", tema: "Autoestrada",
-      enunciado: "Uma ambulância, sem luzes nem sirene, vai entrar na autoestrada. Tu circulas na faixa da direita. Quem tem prioridade?",
+      enunciado: "Uma ambulância, sem luzes nem sirene, vai entrar na autoestrada. Tu circulas na via de trânsito da direita. Quem tem prioridade?",
       opcoes: [C("Tu, que já circulas na autoestrada", 1), C("A ambulância, por ser um veículo de socorro"), C("Quem estiver à frente")],
       cena: { peca: "entrada_autoestrada", elementos: [
         { id: "amb", tipo: "ambulancia", lugar: "via_aceleracao", avanco: 0.6, estado: { emergencia: false, pisca: "esquerdo" } },
         { id: "tu", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "amb", posicao: "atras", tu: true }],
-        elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência apagadas", "tu na faixa da direita"] } },
+        elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência apagadas", "tu na via de trânsito da direita"] } },
 
     /* ---------- Tema 4 — Peões, ciclistas e passadeiras ---------- */
     { id: "4.1", tema: "Peões, ciclistas e passadeiras",
@@ -116,13 +116,13 @@
         { id: "peao", tipo: "peao", lugar: "passadeira", avanco: 0.5 }],
         elementos_criticos: ["passadeira à tua frente", "peão a meio da passadeira"] } },
     { id: "4.3", tema: "Peões, ciclistas e passadeiras",
-      enunciado: "Na faixa ao lado, um ligeiro está parado mesmo antes de uma passadeira. Podes ultrapassá-lo?",
+      enunciado: "Na via de trânsito ao lado, um ligeiro está parado mesmo antes de uma passadeira. Podes ultrapassá-lo?",
       opcoes: [C("Não: é proibido ultrapassar imediatamente antes e na passadeira", 1), C("Sim, se não vires nenhum peão"), C("Sim, se buzinares antes")],
       cena: { peca: "passadeira_avenida", elementos: [
         { id: "parado", tipo: "ligeiro", lugar: "faixa_direita", avanco: 0.43, estado: { travao: true } },
         { id: "tu", tipo: "ligeiro", lugar: "faixa_esquerda", junto_a: "parado", posicao: "atras", tu: true },
         { id: "peao", tipo: "peao", lugar: "passadeira", avanco: 0.25 }],
-        elementos_criticos: ["ligeiro parado antes da passadeira, na faixa da direita", "tu na faixa da esquerda, atrás dele", "peão na passadeira, à frente do carro parado"] } },
+        elementos_criticos: ["ligeiro parado antes da passadeira, na via de trânsito da direita", "tu na via de trânsito da esquerda, atrás dele", "peão na passadeira, à frente do carro parado"] } },
     { id: "4.4", tema: "Peões, ciclistas e passadeiras",
       enunciado: "Queres deixar sair um passageiro e paras a 3 metros de uma passadeira. Está correto?",
       opcoes: [C("Não: é proibido parar a menos de 5 m antes de uma passadeira", 1), C("Sim, se for por pouco tempo"), C("Sim, se ligares os quatro piscas")],
@@ -163,18 +163,18 @@
     /* ---------- Tema 6 — Veículos em marcha de urgência ---------- */
     { id: "6.1", tema: "Veículos em marcha de urgência",
       enunciado: "Uma ambulância, com luzes e sirene ligadas, aproxima-se por trás de ti. O que fazes?",
-      opcoes: [C("Sinalizas e desvias-te para a direita quando for seguro, facilitando a passagem", 1), C("Aceleras para não a atrasar"), C("Manténs a marcha, porque a faixa é tua")],
+      opcoes: [C("Sinalizas e desvias-te para a direita quando for seguro, facilitando a passagem", 1), C("Aceleras para não a atrasar"), C("Manténs a marcha, porque estás na tua via de trânsito")],
       cena: { peca: "estrada_2sentidos", elementos: [
         { id: "tu", tipo: "ligeiro", lugar: "via", avanco: 0.65, tu: true },
         { id: "amb", tipo: "ambulancia", lugar: "via", junto_a: "tu", posicao: "atras", estado: { emergencia: true } }],
         elementos_criticos: ["ambulância atrás de ti", "luzes de emergência acesas"] } },
     { id: "6.2", tema: "Veículos em marcha de urgência",
       enunciado: "A ambulância, com luzes e sirene ligadas, deve ceder a passagem ao entrar na autoestrada?",
-      opcoes: [C("Não: em marcha de urgência são os outros que lhe facilitam a passagem", 1), C("Sim, como qualquer veículo que entra na autoestrada"), C("Só se a faixa da direita estiver ocupada")],
+      opcoes: [C("Não: em marcha de urgência são os outros que lhe facilitam a passagem", 1), C("Sim, como qualquer veículo que entra na autoestrada"), C("Só se a via de trânsito da direita estiver ocupada")],
       cena: { peca: "entrada_autoestrada", elementos: [
         { id: "amb", tipo: "ambulancia", lugar: "via_aceleracao", avanco: 0.5, estado: { emergencia: true } },
         { id: "lado", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "amb", posicao: "ao_lado" }],
-        elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência acesas", "ligeiro na faixa da direita, ao lado"] } },
+        elementos_criticos: ["ambulância na via de aceleração", "luzes de emergência acesas", "ligeiro na via de trânsito da direita, ao lado"] } },
     { id: "6.3", tema: "Veículos em marcha de urgência",
       enunciado: "Tens o semáforo verde. Pela tua esquerda aproxima-se um veículo dos bombeiros com luzes e sirene ligadas. O que fazes?",
       opcoes: [C("Paras e deixas passar o veículo dos bombeiros", 1), C("Avanças, porque tens verde"), C("Avanças depressa, para sair do caminho")],
@@ -183,13 +183,13 @@
         { id: "bombeiros", tipo: "bombeiros", lugar: "oeste", avanco: 0.7, estado: { emergencia: true } }],
         elementos_criticos: ["semáforo verde na tua entrada", "veículo dos bombeiros a vir da esquerda", "luzes de emergência acesas"] } },
     { id: "6.4", tema: "Veículos em marcha de urgência",
-      enunciado: "Na autoestrada, segues na faixa da esquerda e uma ambulância em marcha de urgência aproxima-se por trás. O que fazes?",
+      enunciado: "Na autoestrada, segues na via de trânsito da esquerda e uma ambulância em marcha de urgência aproxima-se por trás. O que fazes?",
       opcoes: [C("Sinalizas e passas para a direita assim que for seguro", 1), C("Travas para ela te ultrapassar pela direita"), C("Paras na berma da esquerda")],
       cena: { peca: "troco_autoestrada", elementos: [
         { id: "tu", tipo: "ligeiro", lugar: "faixa_esquerda", avanco: 0.6, tu: true, estado: { pisca: "direito" } },
         { id: "amb", tipo: "ambulancia", lugar: "faixa_esquerda", junto_a: "tu", posicao: "atras", estado: { emergencia: true } },
         { id: "outro", tipo: "ligeiro", lugar: "faixa_direita", avanco: 0.75 }],
-        elementos_criticos: ["tu na faixa da esquerda", "ambulância atrás de ti, com luzes acesas", "faixa central livre"] } },
+        elementos_criticos: ["tu na via de trânsito da esquerda", "ambulância atrás de ti, com luzes acesas", "via de trânsito do meio livre"] } },
 
     /* ---------- Tema 7 — Sinalização ---------- */
     { id: "7.1", tema: "Sinalização",
