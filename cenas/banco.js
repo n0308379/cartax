@@ -88,7 +88,7 @@
         elementos_criticos: ["tu na via de aceleração", "ligeiro na via de trânsito da direita, ao teu lado"] } },
     { id: "3.2", tema: "Autoestrada",
       enunciado: "Para que serve a via de aceleração?",
-      opcoes: [C("Para ganhar velocidade e entrar quando houver espaço na via de trânsito da direita", 1), C("Para circular como mais uma via de trânsito até à saída seguinte"), C("Para entrar à mesma velocidade do ramal")],
+      opcoes: [C("Para ganhar velocidade e entrar quando houver espaço na via de trânsito da direita", 1), C("Para circular nela até à saída seguinte"), C("Para entrar à mesma velocidade do ramal")],
       cena: { peca: "entrada_autoestrada", elementos: [
         { id: "tu", tipo: "ligeiro", lugar: "via_aceleracao", avanco: 0.3, tu: true, estado: { pisca: "esquerdo" } }],
         elementos_criticos: ["tu na via de aceleração", "via de aceleração a terminar à frente"] } },
