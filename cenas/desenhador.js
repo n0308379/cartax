@@ -8,7 +8,7 @@
 (function (global) {
   "use strict";
 
-  var VERSAO = "0.4.1";
+  var VERSAO = "0.5.0";
   var W = 1000, H = 1000;
   var BRANCO = "#f3f1ea";
 
@@ -583,8 +583,26 @@
   /* ---------- colocar elementos ---------- */
   var DIST = 26; // espaço entre veículos em "atrás" e "à frente"
 
-  function colocar(cena, peca, r, erros, avisos) {
-    var porId = {}, colocados = [], lista = (cena.elementos || []).slice(), pendentes = lista.slice(), voltas = 0;
+  // Variações de situação: cada elemento pode declarar "variar": { posicao: [...], lugar: [...] }.
+  // A semente escolhe uma combinação; a semente 1 usa sempre a primeira opção de cada lista.
+  function aplicarVariacoes(lista, semente, erros) {
+    var passo = 1;
+    return lista.map(function (el) {
+      if (!el.variar) return el;
+      var copia = {}, k;
+      for (k in el) if (k !== "variar") copia[k] = el[k];
+      Object.keys(el.variar).forEach(function (prop) {
+        var ops = el.variar[prop];
+        if (!Array.isArray(ops) || !ops.length) { erros.push('"' + (el.id || el.tipo) + '": "variar.' + prop + '" tem de ser uma lista de opções.'); return; }
+        copia[prop] = ops[Math.floor((semente - 1) / passo) % ops.length];
+        passo *= ops.length;
+      });
+      return copia;
+    });
+  }
+
+  function colocar(cena, peca, r, erros, avisos, semente) {
+    var porId = {}, colocados = [], lista = aplicarVariacoes((cena.elementos || []).slice(), semente || 1, erros), pendentes = lista.slice(), voltas = 0;
     while (pendentes.length && voltas < 10) {
       voltas++;
       pendentes = pendentes.filter(function (el) {
@@ -614,7 +632,8 @@
       var alvo = porId[el.junto_a], off = 0;
       if (el.posicao === "atras") off = -((alvo.h + v.h) / 2 + DIST);
       else if (el.posicao === "a_frente") off = (alvo.h + v.h) / 2 + DIST;
-      else if (el.posicao && el.posicao !== "ao_lado") { erros.push('"' + ref + '": posição "' + el.posicao + '" desconhecida (usar ao_lado, atras ou a_frente).'); return null; }
+      else if (el.posicao === "angulo_morto") off = -alvo.h * 0.75;
+      else if (el.posicao && el.posicao !== "ao_lado") { erros.push('"' + ref + '": posição "' + el.posicao + '" desconhecida (usar ao_lado, atras, a_frente ou angulo_morto).'); return null; }
       if (lug.tipo === "linha") {
         var proj = ((alvo.x - lug.x0) * lug.ux + (alvo.y - lug.y0) * lug.uy);
         t = (proj + off) / lug.L;
@@ -677,7 +696,7 @@
     var amb = AMBIENTES[nomeAmb] || AMBIENTES.dia;
     AMB_ATUAL = amb;
 
-    var elementos = colocar(cena, peca, r, erros, avisos);
+    var elementos = colocar(cena, peca, r, erros, avisos, semente);
     var s = [];
     s.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="' + esc(peca.nome) + '">');
     s.push('<defs><radialGradient id="brilhoAzul"><stop offset="0" stop-color="#3d86ff" stop-opacity="0.95"/><stop offset="0.45" stop-color="#3d86ff" stop-opacity="0.55"/><stop offset="1" stop-color="#3d86ff" stop-opacity="0"/></radialGradient></defs>');
@@ -691,6 +710,16 @@
       }
     }
     var etiquetas = [];
+    if (cena.mostrar_angulo_morto) elementos.filter(function (e) { return e.tu; }).forEach(function (e) {
+      var p = e.estado.pisca, lados = p === "esquerdo" ? [-1] : p === "direito" ? [1] : [-1, 1], z = [];
+      lados.forEach(function (ld) {
+        var x0 = ld * (e.w / 2 + 6), x1 = ld * (e.w / 2 + 112), y0 = -e.h * 0.05, y1 = e.h * 1.35;
+        z.push('<path d="M' + x0 + ' ' + y0 + ' L' + x1 + ' ' + (y0 + 30) + ' L' + x1 + ' ' + y1 + ' L' + x0 + ' ' + y1 + ' Z" fill="rgba(255,176,0,0.22)" stroke="rgba(255,176,0,0.85)" stroke-width="3" stroke-dasharray="9 7"/>');
+        var tx = (x0 + x1) / 2, ty = y1 + 26;
+        z.push('<text x="' + tx + '" y="' + ty + '" transform="rotate(' + (-e.rumo) + ' ' + tx + ' ' + ty + ')" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="4" paint-order="stroke">ângulo morto</text>');
+      });
+      s.push('<g transform="translate(' + e.x.toFixed(1) + " " + e.y.toFixed(1) + ") rotate(" + e.rumo.toFixed(1) + ')">' + z.join("") + "</g>");
+    });
     elementos.forEach(function (e) {
       var extra = "";
       if (e.tu) { var m = marcaTu(e, elementos); extra = m.contorno; etiquetas.push(m.etiqueta); }
@@ -726,7 +755,7 @@
     if ((cena.marcos_berma || []).length) linhas.push("Marco na berma");
     colocados.forEach(function (e) {
       var l = (e.tu ? "TU · " : "") + NOMES[e.tipo] + " · " + e.lugarNome;
-      if (e.junto_a) l += " · " + (e.posicao || "ao_lado").replace("_", " ").replace("atras", "atrás").replace("a frente", "à frente") + " de " + e.junto_a;
+      if (e.junto_a) l += " · " + (e.posicao === "angulo_morto" ? "no ângulo morto" : (e.posicao || "ao_lado").replace("_", " ").replace("atras", "atrás").replace("a frente", "à frente")) + " de " + e.junto_a;
       var st = [];
       if (e.estado.emergencia === true) st.push("luzes de emergência acesas");
       if (e.estado.emergencia === false && (e.tipo === "ambulancia" || e.tipo === "bombeiros")) st.push("luzes de emergência apagadas");
@@ -792,28 +821,51 @@
     if (tu) {
       var rel = outros.map(function (o) { return { o: o, r: relativo(tu, o) }; });
       var vir = /\bvir\b|\bvem\b|\bvindo\b|aproxima|pela tua (direita|esquerda)|da tua (direita|esquerda)/.test(t);
-      if (/\bdireita\b/.test(t) && vir && !/faixa da direita|via (?:de transito )?da direita|berma direita|passeio direito/.test(t) && !rel.some(function (x) { return x.r.lado > 60; })) msgs.push("Diz que vem um veículo da direita, mas na cena não há nenhum à direita do aluno.");
-      if (/\besquerda\b/.test(t) && vir && !/faixa da esquerda|via (?:de transito )?da esquerda|pisca esquerdo/.test(t) && !rel.some(function (x) { return x.r.lado < -60; })) msgs.push("Diz que vem um veículo da esquerda, mas na cena não há nenhum à esquerda do aluno.");
+      // alternativas: "da esquerda ou da direita" e "ao teu lado, à tua frente ou no ângulo morto"
+      var multiDir = vir && /(esquerda|direita) ou (da |pela )?(tua )?(esquerda|direita)/.test(t);
+      // "zona do ângulo morto" refere a sombra desenhada, não um veículo
+      var tp = t.replace(/zona d[oe] angulo morto/g, "");
+      if (tp !== t && !cena.mostrar_angulo_morto) msgs.push("Refere a zona do ângulo morto, mas a cena não a mostra (mostrar_angulo_morto).");
+      var POS = [
+        [/ao (teu )?lado/, function (x) { return Math.abs(x.r.frente) < 60 && Math.abs(x.r.lado) > 40 && Math.abs(x.r.lado) < 170; }],
+        [/a tua frente/, function (x) { return x.r.frente > 40; }],
+        [/angulo morto/, function (x) { return x.r.frente < -5 && x.r.frente > -tu.h * 1.4 && Math.abs(x.r.lado) > 40 && Math.abs(x.r.lado) < 170; }],
+        [/atras de ti|por tras/, function (x) { return x.r.frente < -40; }]
+      ].filter(function (p) { return p[0].test(tp); });
+      var multiPos = POS.length > 1 && /\bou\b/.test(tp);
+      if (multiDir && !rel.some(function (x) { return Math.abs(x.r.lado) > 60; })) msgs.push("Diz que vem um veículo de um dos lados, mas não há nenhum à esquerda nem à direita do aluno.");
+      if (multiPos && !POS.some(function (p) { return rel.some(p[1]); })) msgs.push("Nenhuma das posições indicadas corresponde à cena.");
+      if (!multiPos && /angulo morto/.test(tp) && !rel.some(POS.filter(function (p) { return p[0].test("angulo morto"); })[0][1])) msgs.push("Diz que há um veículo no ângulo morto, mas não há nenhum.");
+      if (/\bdireita\b/.test(t) && vir && !multiDir && !/faixa da direita|via (?:de transito )?da direita|berma direita|passeio direito/.test(t) && !rel.some(function (x) { return x.r.lado > 60; })) msgs.push("Diz que vem um veículo da direita, mas na cena não há nenhum à direita do aluno.");
+      if (/\besquerda\b/.test(t) && vir && !multiDir && !/faixa da esquerda|via (?:de transito )?da esquerda|pisca esquerdo/.test(t) && !rel.some(function (x) { return x.r.lado < -60; })) msgs.push("Diz que vem um veículo da esquerda, mas na cena não há nenhum à esquerda do aluno.");
       var contrario = outros.some(function (o) { var d = Math.abs(((o.rumo - tu.rumo) % 360 + 540) % 360 - 180); return d > 150; });
       if (/sentido contrario/.test(t) && !livre && !contrario) msgs.push("Refere um veículo em sentido contrário, mas não há nenhum.");
       if (/sentido contrario/.test(t) && livre && contrario) msgs.push("Diz que o sentido contrário está livre, mas há um veículo nele.");
-      if (/a tua frente/.test(t) && !rel.some(function (x) { return x.r.frente > 40; })) msgs.push("Diz que há um elemento à tua frente, mas não há nenhum.");
-      if (/atras de ti|por tras/.test(t) && !rel.some(function (x) { return x.r.frente < -40; })) msgs.push("Diz que há um elemento atrás de ti, mas não há nenhum.");
+      if (!multiPos && /a tua frente/.test(t) && !rel.some(function (x) { return x.r.frente > 40; })) msgs.push("Diz que há um elemento à tua frente, mas não há nenhum.");
+      if (!multiPos && /atras de ti|por tras/.test(t) && !rel.some(function (x) { return x.r.frente < -40; })) msgs.push("Diz que há um elemento atrás de ti, mas não há nenhum.");
     }
-    if (/ao (teu )?lado/.test(t) && !cs.some(function (a) { return cs.some(function (b) { if (a === b) return false; var r = relativo(a, b); return Math.abs(r.frente) < 60 && Math.abs(r.lado) > 40 && Math.abs(r.lado) < 170; }); })) msgs.push("Diz \"ao lado\", mas nenhum par de elementos está lado a lado.");
+    var multiPosG = /\bou\b/.test(t) && [/ao (teu )?lado/, /a tua frente/, /angulo morto/, /atras de ti|por tras/].filter(function (re) { return re.test(t); }).length > 1;
+    if (!multiPosG && /ao (teu )?lado/.test(t) && !cs.some(function (a) { return cs.some(function (b) { if (a === b) return false; var r = relativo(a, b); return Math.abs(r.frente) < 60 && Math.abs(r.lado) > 40 && Math.abs(r.lado) < 170; }); })) msgs.push("Diz \"ao lado\", mas nenhum par de elementos está lado a lado.");
     if (/atras (dele|dela|da |do )|a frente (dele|dela|da |do )/.test(t) && !cs.some(function (a) { return cs.some(function (b) { if (a === b) return false; var r = relativo(a, b); return Math.abs(r.lado) < 70 && r.frente > 40; }); })) msgs.push("Refere um elemento à frente ou atrás de outro, mas não há nenhum alinhado.");
     return { texto: texto, ok: msgs.length === 0, mensagens: msgs };
   }
 
+  function temVariacoes(cena) { return (cena.elementos || []).some(function (e) { return !!e.variar; }); }
+
+  // Com variações de situação, cada elemento crítico tem de ser verdade em todas as variantes (1 a 20).
   function verificar(cena, opcoes) {
-    var r = desenhar(cena, opcoes || { semente: 1 });
-    if (r.erros.length) return { auto: [], criticos: [], erros: r.erros };
-    var cs = r.colocados;
-    return {
-      auto: descrever(cena, cs),
-      criticos: (cena.elementos_criticos || []).map(function (t) { return verificarItem(t, cena, cs); }),
-      erros: []
-    };
+    var sementes = opcoes && opcoes.semente ? [opcoes.semente] : (temVariacoes(cena) ? Array.apply(null, Array(20)).map(function (_, i) { return i + 1; }) : [1]);
+    var base = desenhar(cena, { semente: sementes[0] });
+    if (base.erros.length) return { auto: [], criticos: [], erros: base.erros };
+    var criticos = (cena.elementos_criticos || []).map(function (t) { return { texto: t, ok: true, mensagens: [] }; });
+    sementes.forEach(function (s) {
+      var r = s === sementes[0] ? base : desenhar(cena, { semente: s });
+      criticos.forEach(function (c) {
+        var v = verificarItem(c.texto, cena, r.colocados);
+        if (!v.ok) { c.ok = false; v.mensagens.forEach(function (m) { var mm = sementes.length > 1 ? m + " (variante " + s + ")" : m; if (c.mensagens.length < 3) c.mensagens.push(mm); }); }
+      });
+    });
+    return { auto: descrever(cena, base.colocados), criticos: criticos, variacoes: temVariacoes(cena), erros: [] };
   }
 
   var api = {

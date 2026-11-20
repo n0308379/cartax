@@ -95,6 +95,17 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
 
+  var POSN = { ao_lado: "ao teu lado", angulo_morto: "no teu ângulo morto", a_frente: "à tua frente", atras: "atrás de ti" };
+  var TIPO = { ligeiro: "ligeiro", pesado: "pesado", ambulancia: "ambulância", bombeiros: "bombeiros", trator: "trator", bicicleta: "ciclista", peao: "peão" };
+  function situacao(cs) {
+    var tu = cs.filter(function (e) { return e.tu; })[0];
+    return cs.filter(function (e) { return !e.tu; }).map(function (e) {
+      if (e.junto_a && POSN[e.posicao || "ao_lado"]) return TIPO[e.tipo] + " " + POSN[e.posicao || "ao_lado"];
+      if (!tu) return TIPO[e.tipo];
+      var a = tu.rumo * Math.PI / 180, dx = e.x - tu.x, dy = e.y - tu.y, lado = dx * Math.cos(a) + dy * Math.sin(a);
+      return TIPO[e.tipo] + (lado < -60 ? " a vir da tua esquerda" : lado > 60 ? " a vir da tua direita" : "");
+    }).join(", ");
+  }
   function ids(svg, n) { return svg.replace(/brilhoAzul/g, "brilhoAzul" + n); }
 
   function lista() {
@@ -134,7 +145,7 @@
       h += '<li class="' + (c.ok ? "" : "rev") + '"><span class="ico">' + (c.ok ? "✓" : "!") + '</span><span>' + esc(c.texto) + (c.ok ? "" : '<span class="msg">Rever: ' + esc(c.mensagens.join(" ")) + '</span>') + '</span></li>';
     });
     h += '</ul><p class="cap">✓ = a app confirmou que está no desenho. O instrutor confirma com os próprios olhos.</p></div></div>';
-    h += '<h2 style="font-size:19px;margin-top:18px">As 20 variantes que o aluno pode ver</h2><p class="cap" style="margin:-6px 0 10px">Mudam as cores, a hora do dia e o piso. A estrada e a regra são sempre as mesmas.</p><div class="thumbs" id="thumbs"></div></section>';
+    h += '<h2 style="font-size:19px;margin-top:18px">As 20 variantes que o aluno pode ver</h2><p class="cap" style="margin:-6px 0 10px">' + (v.variacoes ? 'Nesta pergunta muda também a posição ou o sentido dos outros veículos, só dentro do que a regra permite: a resposta certa é a mesma em todas.' : 'Mudam as cores, a hora do dia e o piso. A estrada e a regra são sempre as mesmas.') + '</p><div class="thumbs" id="thumbs"></div></section>';
 
     h += '<section class="card todo"><h2>O que o instrutor confirma</h2><ol class="check"><li>A pergunta está clara e correta.</li><li>Só uma resposta está certa, e é a assinalada.</li><li>A explicação está certa e fácil de perceber.</li><li>O artigo é o certo (ou indica-o, se estiver «a confirmar»).</li><li>As cenas mostram a situação e tudo o que tem de aparecer.</li></ol><p class="muted" style="margin:12px 0 0">Na folha de revisão: marcar <b style="color:#F5F3EE">OK</b> ou <b style="color:#F5F3EE">Corrigir</b>, com um comentário.</p></section>';
     $("main").innerHTML = h;
@@ -143,7 +154,7 @@
       sel = s;
       var r = C.desenhar(q.cena, { semente: s });
       $("big").innerHTML = ids(r.svg, "g");
-      $("cap").textContent = "Variante " + s + " de 20 · " + (AMB[r.ambiente] || r.ambiente || "");
+      $("cap").textContent = "Variante " + s + " de 20 · " + (AMB[r.ambiente] || r.ambiente || "") + (v.variacoes ? " · " + situacao(r.colocados) : "");
       Array.prototype.forEach.call($("thumbs").children, function (b, k) { b.setAttribute("aria-pressed", String(k + 1 === s)); });
     }
     var th = $("thumbs");

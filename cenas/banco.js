@@ -22,12 +22,12 @@
         { id: "esquerda", tipo: "ligeiro", lugar: "oeste", avanco: 0.8 }],
         elementos_criticos: ["cruzamento sem sinais nem semáforos", "ligeiro a vir da tua esquerda"] } },
     { id: "1.3", tema: "Prioridades em cruzamentos",
-      enunciado: "Tens um sinal STOP. Na via principal, sem sinais, vem um ligeiro pela tua esquerda. O que fazes?",
-      opcoes: [C("Paras e cedes-lhe a passagem", 1), C("Paras e avanças, porque ele vem da esquerda"), C("Abrandas e passas se ele estiver longe")],
+      enunciado: "Tens um sinal STOP. Na via principal, sem sinais, vem um ligeiro. O que fazes?",
+      opcoes: [C("Paras e cedes-lhe a passagem", 1), C("Paras e avanças, se ele vier da tua esquerda"), C("Abrandas e passas se ele estiver longe")],
       cena: { peca: "entroncamento_t", sinais: { sul: "stop" }, elementos: [
         { id: "tu", tipo: "ligeiro", lugar: "sul", avanco: 1, tu: true },
-        { id: "esquerda", tipo: "ligeiro", lugar: "oeste", avanco: 0.7 }],
-        elementos_criticos: ["sinal STOP e linha de paragem na tua via", "ligeiro na via principal a vir da esquerda"] } },
+        { id: "outro", tipo: "ligeiro", lugar: "oeste", avanco: 0.7, variar: { lugar: ["oeste", "este"] } }],
+        elementos_criticos: ["sinal STOP e linha de paragem na tua via", "ligeiro na via principal, a vir da esquerda ou da direita"] } },
     { id: "1.4", tema: "Prioridades em cruzamentos",
       enunciado: "Tens sinal de cedência de passagem. Na via principal vêm dois ligeiros: um pela direita e outro pela esquerda. A quem cedes?",
       opcoes: [C("Aos dois", 1), C("Só ao da direita"), C("Só ao da esquerda")],
@@ -80,12 +80,12 @@
 
     /* ---------- Tema 3 — Autoestrada ---------- */
     { id: "3.1", tema: "Autoestrada",
-      enunciado: "Estás na via de aceleração para entrar na autoestrada. Um ligeiro circula na via de trânsito da direita, ao teu lado. O que fazes?",
+      enunciado: "Estás na via de aceleração para entrar na autoestrada. Um ligeiro circula na via de trânsito da direita, perto de ti. O que fazes?",
       opcoes: [C("Cedes-lhe a passagem e entras atrás dele", 1), C("Entras, porque estás à direita dele"), C("Paras no fim da via de aceleração")],
-      cena: { peca: "entrada_autoestrada", elementos: [
+      cena: { peca: "entrada_autoestrada", mostrar_angulo_morto: true, elementos: [
         { id: "tu", tipo: "ligeiro", lugar: "via_aceleracao", avanco: 0.5, tu: true, estado: { pisca: "esquerdo" } },
-        { id: "lado", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "tu", posicao: "ao_lado" }],
-        elementos_criticos: ["tu na via de aceleração", "ligeiro na via de trânsito da direita, ao teu lado"] } },
+        { id: "lado", tipo: "ligeiro", lugar: "faixa_direita", junto_a: "tu", posicao: "ao_lado", variar: { posicao: ["ao_lado", "angulo_morto", "a_frente"] } }],
+        elementos_criticos: ["tu na via de aceleração", "ligeiro na via de trânsito da direita, ao teu lado, à tua frente ou no ângulo morto", "zona do ângulo morto assinalada"] } },
     { id: "3.2", tema: "Autoestrada",
       enunciado: "Para que serve a via de aceleração?",
       opcoes: [C("Para ganhar velocidade e entrar quando houver espaço na via de trânsito da direita", 1), C("Para circular nela até à saída seguinte"), C("Para entrar à mesma velocidade do ramal")],
