@@ -412,7 +412,7 @@ function endHz(){
   const lab=p=>p==null?"Não detetado":p===5?"Excelente, viste cedo":p===3?"A tempo":"Muito em cima";
   $app.innerHTML=topbar()+`<div class="result"><span class="label">Missão concluída</span><h2>${pts} de 10 pontos</h2>
    <div class="hz-list">${HZ.map((h,i)=>`<div class="hz-item"><span class="pts" style="color:${r.hits[i]==null?C.red:r.hits[i]===5?C.ok:C.amber}">${lab(r.hits[i])} · ${r.hits[i]||0} pts</span><b>${h.name}</b><span>${h.tip}</span></div>`).join("")}
-   ${r.false?`<div class="hz-item"><b>${r.false} ${r.false===1?"toque fora de tempo":"toques fora de tempo"}</b><span>Tocar sem haver perigo não dá pontos. No exame real de perceção de risco, toques a mais podem anular a resposta.</span></div>`:""}</div>
+   ${r.false?`<div class="hz-item"><b>${r.false} ${r.false===1?"toque fora de tempo":"toques fora de tempo"}</b><span>Tocar sem haver perigo não dá pontos. Ver o perigo é saber quando ele começa, não tocar a toda a hora.</span></div>`:""}</div>
    <div class="actions"><button class="btn ghost" id="again">Repetir</button><button class="btn" id="h">Voltar ao percurso</button></div></div>`;
   document.getElementById("h").onclick=home;document.getElementById("again").onclick=hazardIntro;
 }
