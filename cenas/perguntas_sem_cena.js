@@ -1,4 +1,4 @@
-/* Perguntas do Banco de Perguntas v0.1 que não têm cena desenhada.
+/* Perguntas do Banco de Perguntas que não têm cena desenhada (inclui o lote 1, «O condutor»).
    imagem = o que está previsto no Banco («Sem cena» = pergunta de conhecimento; «Fotografia IA» = por fazer). */
 (function (global) {
   var C = function (t, certa) { return [t, !!certa]; };
@@ -34,7 +34,48 @@
       imagem: "Fotografia IA · estrada à noite, vista do lugar do condutor, faróis de um veículo a aproximar-se" },
     { id: "8.5", tema: "Condições adversas e distância de segurança", enunciado: "Sentes que o carro está a perder aderência numa poça de água (aquaplanagem). O que fazes?",
       opcoes: [C("Tiras o pé do acelerador, seguras o volante a direito e não travas a fundo", 1), C("Travas a fundo"), C("Viras o volante com força para sair da poça")],
-      imagem: "Fotografia IA · estrada com poças largas, vista do lugar do condutor" }
+      imagem: "Fotografia IA · estrada com poças largas, vista do lugar do condutor" },
+    /* Lote 1 (perguntas 41 a 60): unidade II do programa, O condutor */
+    { id: "9.1", tema: "O condutor", enunciado: "Tens carta há mais de 3 anos e conduzes um ligeiro de passageiros. A partir de que taxa de álcool no sangue estás proibido de conduzir?",
+      opcoes: [C("0,5 g/l", 1), C("0,8 g/l"), C("1,2 g/l")], imagem: "Sem cena" },
+    { id: "9.2", tema: "O condutor", enunciado: "Tens carta há um ano. A partir de que taxa de álcool no sangue estás proibido de conduzir?",
+      opcoes: [C("0,2 g/l", 1), C("0,5 g/l"), C("0,8 g/l")], imagem: "Sem cena" },
+    { id: "9.3", tema: "O condutor", enunciado: "A partir de que taxa de álcool no sangue conduzir passa a ser crime?",
+      opcoes: [C("1,2 g/l", 1), C("0,8 g/l"), C("0,5 g/l")], imagem: "Sem cena" },
+    { id: "9.4", tema: "O condutor", enunciado: "Bebeste álcool num jantar. O que faz baixar a taxa de álcool no sangue?",
+      opcoes: [C("Só o tempo", 1), C("Um café forte"), C("Um duche frio")], imagem: "Sem cena" },
+    { id: "9.5", tema: "O condutor", enunciado: "Bebeste, mas estás abaixo do limite legal. O que acontece à tua condução?",
+      opcoes: [C("O tempo de reação aumenta e o risco parece menor do que é", 1), C("A concentração melhora"), C("Nada: abaixo do limite, o álcool não tem efeito")], imagem: "Sem cena" },
+    { id: "9.6", tema: "O condutor", enunciado: "Um agente da autoridade pede-te para fazeres o teste do álcool e tu recusas. O que acontece?",
+      opcoes: [C("Cometes um crime de desobediência", 1), C("Nada, se não houver acidente"), C("Pagas uma coima leve")], imagem: "Sem cena" },
+    { id: "9.7", tema: "O condutor", enunciado: "Podes conduzir sob a influência de drogas (substâncias psicotrópicas)?",
+      opcoes: [C("Não: é proibido", 1), C("Sim, se for pouca quantidade"), C("Sim, se não tiveres bebido álcool")], imagem: "Sem cena" },
+    { id: "9.8", tema: "O condutor", enunciado: "Tomaste um medicamento que pode provocar sonolência. O que fazes?",
+      opcoes: [C("Lês o folheto e, se avisar que afeta a condução, não conduzes", 1), C("Conduzes, porque foi receitado pelo médico"), C("Bebes um café e conduzes")], imagem: "Sem cena" },
+    { id: "9.9", tema: "O condutor", enunciado: "Tomaste um medicamento que dá sonolência e bebeste um copo de vinho. O que acontece?",
+      opcoes: [C("Os efeitos podem somar-se e ficar mais fortes", 1), C("O álcool anula o efeito do medicamento"), C("Nada, se estiveres abaixo de 0,5 g/l")], imagem: "Sem cena" },
+    { id: "9.10", tema: "O condutor", enunciado: "Qual destes é um sinal de que estás cansado ao volante?",
+      opcoes: [C("Bocejar, pestanejar muito e ter dificuldade em manter a trajetória", 1), C("Ter vontade de ouvir música"), C("Ter fome")], imagem: "Sem cena" },
+    { id: "9.11", tema: "O condutor", enunciado: "Numa viagem longa, de quanto em quanto tempo é recomendado fazer uma pausa?",
+      opcoes: [C("Cerca de 2 em 2 horas", 1), C("Só quando chegares ao destino"), C("De 5 em 5 horas")], imagem: "Sem cena" },
+    { id: "9.12", tema: "O condutor", enunciado: "Começas a sentir sono a conduzir. O que fazes?",
+      opcoes: [C("Paras num local seguro e descansas", 1), C("Abres a janela e pões o rádio alto"), C("Aceleras para chegar mais depressa")], imagem: "Fotografia IA · área de serviço de autoestrada, vista do lugar do condutor" },
+    { id: "9.13", tema: "O condutor", enunciado: "Em que horas é maior o risco de adormecer ao volante?",
+      opcoes: [C("De madrugada e no início da tarde", 1), C("A meio da manhã"), C("Ao fim da tarde")], imagem: "Sem cena" },
+    { id: "9.14", tema: "O condutor", enunciado: "A tua carta tem o código 01 (correção da visão). Esqueceste-te dos óculos em casa. Podes conduzir?",
+      opcoes: [C("Não, enquanto não tiveres os óculos ou as lentes", 1), C("Sim, se vires bem nesse dia"), C("Sim, mas só de dia")], imagem: "Sem cena" },
+    { id: "9.15", tema: "O condutor", enunciado: "O que acontece ao teu campo de visão útil quando a velocidade aumenta?",
+      opcoes: [C("Fica mais estreito", 1), C("Fica mais largo"), C("Não muda")], imagem: "Sem cena" },
+    { id: "9.16", tema: "O condutor", enunciado: "Notas que, de há uns tempos para cá, vês mal à noite. O que fazes?",
+      opcoes: [C("Vais ao médico e só conduzes à noite se ele confirmar que estás apto", 1), C("Continuas a conduzir, porque de dia vês bem"), C("Conduzes à noite com os máximos sempre ligados")], imagem: "Sem cena" },
+    { id: "9.17", tema: "O condutor", enunciado: "Acabaste de ter uma discussão e estás muito irritado. O que fazes antes de conduzir?",
+      opcoes: [C("Esperas até te acalmares", 1), C("Conduzes mais depressa para descarregar a tensão"), C("Conduzes logo: a raiva mantém-te alerta")], imagem: "Sem cena" },
+    { id: "9.18", tema: "O condutor", enunciado: "Recebeste uma mensagem no telemóvel. Podes lê-la com o telemóvel na mão enquanto conduzes?",
+      opcoes: [C("Não", 1), C("Sim, se fores devagar"), C("Sim, numa reta sem trânsito")], imagem: "Sem cena" },
+    { id: "9.19", tema: "O condutor", enunciado: "Qual é a forma permitida de falar ao telemóvel enquanto conduzes?",
+      opcoes: [C("Com alta voz ou um só auricular, sem manusear o telemóvel", 1), C("Com o telemóvel na mão, em chamadas curtas"), C("Com auscultadores nos dois ouvidos")], imagem: "Sem cena" },
+    { id: "9.20", tema: "O condutor", enunciado: "Quando deves programar o GPS?",
+      opcoes: [C("Antes de arrancar, com o carro parado", 1), C("Durante a marcha, numa reta"), C("Parado num semáforo vermelho")], imagem: "Fotografia IA · interior do carro, GPS no tablier, vista do lugar do condutor" }
   ];
   if (typeof module !== "undefined" && module.exports) module.exports = L;
   else global.CartaXSemCena = L;
