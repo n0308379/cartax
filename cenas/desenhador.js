@@ -8,7 +8,7 @@
 (function (global) {
   "use strict";
 
-  var VERSAO = "0.5.0";
+  var VERSAO = "0.6.0";
   var W = 1000, H = 1000;
   var BRANCO = "#f3f1ea";
 
@@ -80,6 +80,25 @@
   }
 
   /* ---------- sinais e semáforos (vistos de frente, como ícones junto à via) ---------- */
+  // triângulo dos sinais de perigo (e dos B7 e B8): fundo branco, orla vermelha, vértice para cima
+  var TRI = '<polygon points="0,-22 23,18 -23,18" fill="#fff" stroke="#c62828" stroke-width="5" stroke-linejoin="round"/>';
+  // três setas em círculo, no sentido contrário ao dos ponteiros do relógio (rotundas)
+  function setasGiratorias(cx, cy, r, cor, larg, ponta) {
+    var s = "";
+    for (var k = 0; k < 3; k++) {
+      var a0 = rad(100 + k * 120), a1 = rad(100 + k * 120 - 78);
+      var p = function (a) { return [cx + r * Math.sin(a), cy - r * Math.cos(a)]; };
+      var A = p(a0), B = p(a1), dx = -Math.cos(a1), dy = -Math.sin(a1), nx = Math.sin(a1), ny = -Math.cos(a1);
+      s += '<path d="M' + A[0].toFixed(2) + " " + A[1].toFixed(2) + " A" + r + " " + r + " 0 0 0 " + B[0].toFixed(2) + " " + B[1].toFixed(2) + '" fill="none" stroke="' + cor + '" stroke-width="' + larg + '"/>';
+      s += '<polygon points="' + (B[0] + dx * ponta * 1.3).toFixed(2) + "," + (B[1] + dy * ponta * 1.3).toFixed(2) + " " + (B[0] + nx * ponta).toFixed(2) + "," + (B[1] + ny * ponta).toFixed(2) + " " + (B[0] - nx * ponta).toFixed(2) + "," + (B[1] - ny * ponta).toFixed(2) + '" fill="' + cor + '"/>';
+    }
+    return s;
+  }
+  // automóvel visto de trás (sinal de proibição de ultrapassar)
+  function carroTraseira(x, cor) {
+    return '<g transform="translate(' + x + ' 1)"><path d="M-4.2 -7 L4.2 -7 L5.6 -1.5 L-5.6 -1.5 Z" fill="' + cor + '"/><rect x="-6.5" y="-2" width="13" height="7.5" rx="1.6" fill="' + cor + '"/>' +
+      '<rect x="-6" y="5" width="3" height="3" fill="#1b1b1b"/><rect x="3" y="5" width="3" height="3" fill="#1b1b1b"/></g>';
+  }
   var SINAIS = {
     stop: function () {
       var p = [], i; for (i = 0; i < 8; i++) { var a = rad(22.5 + i * 45); p.push((22 * Math.cos(a)).toFixed(1) + "," + (22 * Math.sin(a)).toFixed(1)); }
@@ -90,8 +109,53 @@
     limite_50: function () { return '<circle r="22" fill="#fff" stroke="#c62828" stroke-width="6"/><text x="0" y="7" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="19" fill="#1b1b1b">50</text>'; },
     obrigacao_direita: function () { return '<circle r="22" fill="#1f5fae" stroke="#fff" stroke-width="2"/><path d="M-9 12 L-9 -1 Q-9 -6 -4 -6 L5 -6" fill="none" stroke="#fff" stroke-width="5"/><path d="M3 -13 L13 -6 L3 1 Z" fill="#fff"/>'; },
     passadeira: function () { return '<rect x="-20" y="-20" width="40" height="40" rx="4" fill="#1f5fae" stroke="#fff" stroke-width="2"/><polygon points="0,-15 15,13 -15,13" fill="#fff"/><circle cx="1" cy="-4" r="2.6" fill="#1b1b1b"/><path d="M1 -1 L0 6 M0 6 L-4 11 M0 6 L4 11 M-4 2 L5 1" stroke="#1b1b1b" stroke-width="2" fill="none"/><rect x="-11" y="10" width="22" height="2" fill="#1b1b1b"/>'; },
-    prioridade: function () { return '<rect x="-16" y="-16" width="32" height="32" transform="rotate(45)" fill="#f5c400" stroke="#fff" stroke-width="5"/>'; }
+    prioridade: function () { return '<rect x="-16" y="-16" width="32" height="32" transform="rotate(45)" fill="#f5c400" stroke="#fff" stroke-width="5"/>'; },
+    /* lote 2 (sinais verticais): desenhos próprios, a partir da descrição do RST; não são as imagens oficiais */
+    perigo_curva_direita: function () { return TRI + '<path d="M-4 14 L-4 4 Q-4 -5 6 -9" fill="none" stroke="#1b1b1b" stroke-width="4.4"/>'; },
+    perigo_cruzamento: function () { return TRI + '<rect x="-2.3" y="-7" width="4.6" height="22" fill="#1b1b1b"/><rect x="-10" y="2.7" width="20" height="4.6" fill="#1b1b1b"/>'; },
+    perigo_peoes: function () {
+      return TRI + '<path d="M-9 15 L-5 11 M-3 15 L1 11 M3 15 L7 11" stroke="#1b1b1b" stroke-width="2"/>' +
+        '<circle cx="1" cy="-7" r="2.4" fill="#1b1b1b"/><path d="M1 -4 L0 3 M0 3 L-3.5 9 M0 3 L3.5 9 M-4 -1 L1 -3 L5 0" stroke="#1b1b1b" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
+    },
+    cruzamento_sem_prioridade: function () { return TRI + '<rect x="-2.7" y="-8" width="5.4" height="23" fill="#1b1b1b"/><rect x="-10" y="4" width="20" height="2.2" fill="#1b1b1b"/>'; },
+    aproximacao_rotunda: function () { return TRI + setasGiratorias(0, 5.5, 6.2, "#1b1b1b", 1.9, 2.2); },
+    fim_prioridade: function () {
+      return '<rect x="-16" y="-16" width="32" height="32" transform="rotate(45)" fill="#f5c400" stroke="#fff" stroke-width="5"/>' +
+        '<path d="M-13 9 L9 -13 M-11 11 L11 -11 M-9 13 L13 -9" stroke="#1b1b1b" stroke-width="1.6"/>';
+    },
+    sentido_proibido: function () { return '<circle r="22" fill="#c62828" stroke="#fff" stroke-width="2"/><rect x="-15" y="-4.2" width="30" height="8.4" fill="#fff"/>'; },
+    transito_proibido: function () { return '<circle r="22" fill="#fff" stroke="#c62828" stroke-width="6"/>'; },
+    proibido_ultrapassar: function () { return '<circle r="22" fill="#fff" stroke="#c62828" stroke-width="6"/>' + carroTraseira(-7, "#c62828") + carroTraseira(7, "#1b1b1b"); },
+    proibido_virar_esquerda: function () {
+      return '<circle r="22" fill="#fff" stroke="#c62828" stroke-width="6"/><path d="M5 14 L5 0 Q5 -6 -1 -6 L-5 -6" fill="none" stroke="#1b1b1b" stroke-width="4.2"/>' +
+        '<polygon points="-12,-6 -4,-12 -4,0" fill="#1b1b1b"/><line x1="-13" y1="-13" x2="13" y2="13" stroke="#c62828" stroke-width="4.5"/>';
+    },
+    estacionamento_proibido: function () { return '<circle r="20.5" fill="#1f5fae" stroke="#c62828" stroke-width="5"/><line x1="-13" y1="-13" x2="13" y2="13" stroke="#c62828" stroke-width="5"/>'; },
+    paragem_estacionamento_proibidos: function () { return '<circle r="20.5" fill="#1f5fae" stroke="#c62828" stroke-width="5"/><path d="M-13 -13 L13 13 M13 -13 L-13 13" stroke="#c62828" stroke-width="5"/>'; },
+    fim_proibicoes: function () {
+      var s = '<circle r="22" fill="#fff" stroke="#1b1b1b" stroke-width="1.2"/>', R = 20, k = Math.SQRT1_2;
+      for (var d = -6; d <= 6; d += 3) {
+        var t = Math.sqrt(R * R - d * d), cx = d * k, cy = d * k;
+        s += '<line x1="' + (cx - t * k).toFixed(1) + '" y1="' + (cy + t * k).toFixed(1) + '" x2="' + (cx + t * k).toFixed(1) + '" y2="' + (cy - t * k).toFixed(1) + '" stroke="#1b1b1b" stroke-width="1.4"/>';
+      }
+      return s;
+    },
+    obrigacao_rotunda: function () { return '<circle r="22" fill="#1f5fae" stroke="#fff" stroke-width="2"/>' + setasGiratorias(0, 0, 10.5, "#fff", 3, 4); },
+    obrigacao_velocidade_minima_40: function () { return '<circle r="22" fill="#1f5fae" stroke="#fff" stroke-width="2"/><text x="0" y="7" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="19" fill="#fff">40</text>'; },
+    obrigacao_contornar_direita: function () { return '<circle r="22" fill="#1f5fae" stroke="#fff" stroke-width="2"/><line x1="-9" y1="-9" x2="5" y2="5" stroke="#fff" stroke-width="5"/><polygon points="12,12 0,9 9,0" fill="#fff"/>'; }
   };
+  /* nome de cada sinal para a descrição automática da cena (código do RST quando existe) */
+  var ROTULOS = {
+    stop: "B2 · STOP", cedencia: "B1 · cedência de passagem", perigo: "sinal de perigo (genérico)", limite_50: "C13 · velocidade máxima 50 km/h",
+    obrigacao_direita: "D1 · sentido obrigatório para a direita", passadeira: "H7 · passagem para peões", prioridade: "B3 · via com prioridade",
+    perigo_curva_direita: "A1a · curva à direita", perigo_cruzamento: "A24 · cruzamento ou entroncamento", perigo_peoes: "A16a · passagem de peões",
+    cruzamento_sem_prioridade: "B8 · cruzamento com via sem prioridade", aproximacao_rotunda: "B7 · aproximação de rotunda", fim_prioridade: "B4 · fim de via com prioridade",
+    sentido_proibido: "C1 · sentido proibido", transito_proibido: "C2 · trânsito proibido", proibido_ultrapassar: "C14a · proibição de ultrapassar",
+    proibido_virar_esquerda: "C11b · proibição de virar à esquerda", estacionamento_proibido: "C15 · estacionamento proibido",
+    paragem_estacionamento_proibidos: "C16 · paragem e estacionamento proibidos", fim_proibicoes: "C20a · fim de todas as proibições",
+    obrigacao_rotunda: "D4 · rotunda", obrigacao_velocidade_minima_40: "D8 · velocidade mínima 40 km/h", obrigacao_contornar_direita: "D3 · contornar pela direita"
+  };
+  function rotulo(tipo) { return ROTULOS[tipo] || String(tipo).replace(/_/g, " "); }
   function sinal(tipo, x, y) {
     if (!SINAIS[tipo]) return null;
     return '<g transform="translate(' + x.toFixed(1) + " " + y.toFixed(1) + ')"><circle r="30" fill="rgba(0,0,0,0.22)" cx="4" cy="5"/>' + SINAIS[tipo]() + "</g>";
@@ -456,7 +520,8 @@
 
   /* Sinal isolado: um sinal em destaque junto a uma estrada */
   PECAS.sinal_isolado = (function () {
-    var lugares = { via: linha(450, 960, 450, 40, "via") };
+    var lugares = { via: linha(450, 960, 450, 40, "via"), via_direita: linha(500, 960, 500, 40, "via de trânsito do teu sentido"),
+      junto_berma: linha(532, 960, 532, 40, "junto ao limite direito da faixa de rodagem") };
     function estrada(amb, cena, avisos) {
       var s = ['<rect x="350" y="0" width="200" height="1000" fill="' + amb.asfalto + '"/>'];
       s.push(seg(354, 0, 354, 1000, BRANCO, 4) + seg(546, 0, 546, 1000, BRANCO, 4) + tracejado(450, 0, 450, 1000, BRANCO, 5, 40, 40));
@@ -748,9 +813,9 @@
     var peca = PECAS[cena.peca], linhas = [];
     if (!peca) return linhas;
     linhas.push("Estrada: " + peca.nome);
-    Object.keys(cena.sinais || {}).forEach(function (k) { linhas.push("Sinal " + cena.sinais[k].replace(/_/g, " ") + " na entrada " + k); });
+    Object.keys(cena.sinais || {}).forEach(function (k) { linhas.push("Sinal " + rotulo(cena.sinais[k]) + " na entrada " + k); });
     Object.keys(cena.semaforos || {}).forEach(function (k) { linhas.push("Semáforo " + cena.semaforos[k] + " na entrada " + k); });
-    if (cena.sinal) linhas.push("Sinal em destaque: " + cena.sinal.replace(/_/g, " "));
+    if (cena.sinal) linhas.push("Sinal em destaque: " + rotulo(cena.sinal));
     if (cena.saida_destacada) linhas.push("Saída destacada: " + cena.saida_destacada);
     if ((cena.marcos_berma || []).length) linhas.push("Marco na berma");
     colocados.forEach(function (e) {
@@ -801,11 +866,13 @@
       if (new RegExp("semaforo " + c).test(t) && !Object.keys(sem).some(function (k) { return sem[k] === c; })) msgs.push("Refere um semáforo " + c + ", mas a cena não o tem.");
     });
     if (/obrigacao|obrigatorio/.test(t) && !valores.some(function (v) { return /^obrigacao/.test(v); })) msgs.push("Refere um sinal de obrigação, mas a cena não o tem.");
-    if (/triangular|perigo/.test(t) && /sinal/.test(t) && valores.indexOf("perigo") < 0) msgs.push("Refere um sinal de perigo, mas a cena não o tem.");
+    if (/triangular|perigo/.test(t) && /sinal/.test(t) && !valores.some(function (v) { return /^perigo|^cruzamento_sem_prioridade|^aproximacao_rotunda/.test(v); })) msgs.push("Refere um sinal triangular, mas a cena não o tem.");
+    if (/proibi/.test(t) && /sinal/.test(t) && !valores.some(function (v) { return /proibi|^limite_|^stop/.test(v); })) msgs.push("Refere um sinal de proibição, mas a cena não o tem.");
+    if (/\bB\d|\b[ACD]\d/.test(texto)) { var cod = texto.match(/\b([ABCD]\d+[a-z]?)\b/); if (cod && !valores.some(function (v) { return rotulo(v).indexOf(cod[1] + " ") === 0; })) msgs.push("Refere o sinal " + cod[1] + ", mas a cena não o tem."); }
     if (/\b50\b/.test(t) && valores.indexOf("limite_50") < 0) msgs.push("Refere um limite de 50, mas a cena não o tem.");
-    if (/passadeira/.test(t) && !/^passadeira/.test(cena.peca)) msgs.push("Refere uma passadeira, mas a peça não tem passadeira.");
+    if (/passadeira/.test(t) && !/^sinal/.test(t) && !/^passadeira/.test(cena.peca)) msgs.push("Refere uma passadeira, mas a peça não tem passadeira.");
     if (/\bmarco\b/.test(t) && !(cena.marcos_berma || []).length) msgs.push("Refere um marco na berma, mas a cena não o tem.");
-    if (/\bcurva\b/.test(t) && cena.peca !== "estrada_curva") msgs.push("Refere uma curva, mas a peça não tem curva.");
+    if (/\bcurva\b/.test(t) && !/^sinal/.test(t) && cena.peca !== "estrada_curva") msgs.push("Refere uma curva, mas a peça não tem curva.");
     if (/saida destacada/.test(t) && !cena.saida_destacada) msgs.push("Refere uma saída destacada, mas a cena não tem nenhuma.");
     // lugares
     var LUG = [[/via de aceleracao/, "via_aceleracao"], [/\bramal\b/, "ramal"], [/via interior/, "via_interior"], [/via exterior/, "via_exterior"],

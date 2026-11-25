@@ -1,4 +1,4 @@
-/* Perguntas do Banco de Perguntas que não têm cena desenhada (inclui o lote 1, «O condutor»).
+/* Perguntas do Banco de Perguntas que não têm cena desenhada (inclui o lote 1, «O condutor», e a 10.1 do lote 2).
    imagem = o que está previsto no Banco («Sem cena» = pergunta de conhecimento; «Fotografia IA» = por fazer). */
 (function (global) {
   var C = function (t, certa) { return [t, !!certa]; };
@@ -75,7 +75,9 @@
     { id: "9.19", tema: "O condutor", enunciado: "Qual é a forma permitida de falar ao telemóvel enquanto conduzes?",
       opcoes: [C("Com alta voz ou um só auricular, sem manusear o telemóvel", 1), C("Com o telemóvel na mão, em chamadas curtas"), C("Com auscultadores nos dois ouvidos")], imagem: "Sem cena" },
     { id: "9.20", tema: "O condutor", enunciado: "Quando deves programar o GPS?",
-      opcoes: [C("Antes de arrancar, com o carro parado", 1), C("Durante a marcha, numa reta"), C("Parado num semáforo vermelho")], imagem: "Fotografia IA · interior do carro, GPS no tablier, vista do lugar do condutor" }
+      opcoes: [C("Antes de arrancar, com o carro parado", 1), C("Durante a marcha, numa reta"), C("Parado num semáforo vermelho")], imagem: "Fotografia IA · interior do carro, GPS no tablier, vista do lugar do condutor" },
+    { id: "10.1", tema: "Sinais verticais", enunciado: "Os sinais de regulamentação transmitem obrigações, restrições ou proibições. Qual destes NÃO é um sinal de regulamentação?",
+      opcoes: [C("Sinal de perigo", 1), C("Sinal de cedência de passagem"), C("Sinal de proibição")], imagem: "Sem cena" }
   ];
   if (typeof module !== "undefined" && module.exports) module.exports = L;
   else global.CartaXSemCena = L;
