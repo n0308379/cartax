@@ -702,7 +702,7 @@
     "15.15": ["O condutor não pode entrar numa passagem de nível enquanto os meios de proteção, como as barreiras, estiverem atravessados na via ou em movimento, nem quando a sinalização ou os agentes ferroviários o proibirem.", "Código da Estrada, art. 67.º, n.º 2",
       { 1: "Com as barreiras em movimento é proibido entrar: podes ficar preso entre elas com o comboio a chegar.",
         2: "Devagar ou depressa, com as barreiras a descer não podes entrar." },
-      "Enquanto esperas numa passagem de nível, de noite, a lei manda usar as luzes de presença."],
+      "Numa passagem de nível sem barreiras nem sinais luminosos, só atravessas depois de te certificares de que não se aproxima nenhum comboio."],
     "15.16": ["O condutor só pode começar a atravessar uma passagem de nível, mesmo que a sinalização o permita, depois de se certificar de que o trânsito não o vai obrigar a parar em cima dela.", "Código da Estrada, art. 67.º, n.º 1",
       { 1: "Parar em cima da linha é muito perigoso: se o comboio chegar, não tens para onde ir.",
         2: "Ficar parcialmente na linha é igualmente perigoso. Só atravessas quando houver espaço para sair totalmente." },
