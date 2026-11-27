@@ -337,7 +337,21 @@
     { id: "12.10", tema: "O condutor e o veículo",
       enunciado: "O carro avariou numa estrada. O que fazes primeiro?",
       opcoes: [C("Se possível, tiras o carro da faixa de rodagem e ligas os quatro piscas", 1), C("Ficas na faixa de rodagem, dentro do carro, à espera de ajuda"), C("Começas a reparar a avaria ali mesmo, na faixa de rodagem")],
-      cena: {"peca": "estrada_2sentidos", "elementos": [{"id": "tu", "tipo": "ligeiro", "lugar": "junto_berma", "avanco": 0.45, "tu": true, "estado": {"pisca": "ambos"}}], "elementos_criticos": ["o teu carro junto à berma, com os quatro piscas"]} }
+      cena: {"peca": "estrada_2sentidos", "elementos": [{"id": "tu", "tipo": "ligeiro", "lugar": "junto_berma", "avanco": 0.45, "tu": true, "estado": {"pisca": "ambos"}}], "elementos_criticos": ["o teu carro junto à berma, com os quatro piscas"]} },
+
+    /* ---------- Tema 13 — Marcas, semáforos e estacionamento (lote 5 do plano: marcas rodoviárias, sinais luminosos, hierarquia dos sinais, sinais dos condutores e dos agentes; paragem e estacionamento) ---------- */
+    { id: "13.1", tema: "Marcas, semáforos e estacionamento",
+      enunciado: "Segues atrás de um trator lento e a linha ao centro da estrada é contínua. Podes pisá-la ou transpô-la para o ultrapassar?",
+      opcoes: [C("Não: a linha contínua não pode ser pisada nem transposta", 1), C("Sim, se não vier ninguém em sentido contrário"), C("Sim, porque o trator é muito lento")],
+      cena: {"peca": "estrada_2sentidos", "linha_central": "continua", "elementos": [{"id": "trator", "tipo": "trator", "lugar": "via", "avanco": 0.6}, {"id": "tu", "tipo": "ligeiro", "lugar": "via", "junto_a": "trator", "posicao": "atras", "tu": true}], "elementos_criticos": ["linha contínua ao centro da estrada", "trator à tua frente"]} },
+    { id: "13.2", tema: "Marcas, semáforos e estacionamento",
+      enunciado: "A linha ao centro é mista: do teu lado está a parte descontínua e do outro lado a contínua. Podes transpô-la para ultrapassar o trator?",
+      opcoes: [C("Sim, se for seguro: vale a linha que está mais perto de ti", 1), C("Não: a parte contínua proíbe sempre a ultrapassagem"), C("Só se a linha do outro lado também for descontínua")],
+      cena: {"peca": "estrada_2sentidos", "linha_central": "mista_descontinua_do_teu_lado", "elementos": [{"id": "trator", "tipo": "trator", "lugar": "via", "avanco": 0.6}, {"id": "tu", "tipo": "ligeiro", "lugar": "via", "junto_a": "trator", "posicao": "atras", "tu": true}], "elementos_criticos": ["linha mista ao centro, descontínua do teu lado", "trator à tua frente"]} },
+    { id: "13.11", tema: "Marcas, semáforos e estacionamento",
+      enunciado: "Numa entrada de cruzamento há um sinal STOP e um semáforo a funcionar, verde para ti. O que prevalece?",
+      opcoes: [C("O semáforo: os sinais luminosos prevalecem sobre os sinais verticais", 1), C("O STOP: tens de parar na mesma"), C("A regra da prioridade à direita")],
+      cena: {"peca": "cruzamento_x", "sinais": {"sul": "stop"}, "semaforos": {"sul": "verde"}, "elementos": [{"id": "tu", "tipo": "ligeiro", "lugar": "sul", "avanco": 0.85, "tu": true}], "elementos_criticos": ["sinal STOP na tua entrada", "semáforo verde na tua entrada"]} }
   ];
   if (typeof module !== "undefined" && module.exports) module.exports = BANCO;
   else global.CartaXBanco = BANCO;

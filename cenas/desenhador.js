@@ -8,7 +8,7 @@
 (function (global) {
   "use strict";
 
-  var VERSAO = "0.6.0";
+  var VERSAO = "0.7.0";
   var W = 1000, H = 1000;
   var BRANCO = "#f3f1ea";
 
@@ -388,7 +388,12 @@
       var s = ['<rect x="400" y="0" width="200" height="1000" fill="' + amb.asfalto + '"/>'];
       s.push('<rect x="380" y="0" width="20" height="1000" fill="#b9b19a"/><rect x="600" y="0" width="20" height="1000" fill="#b9b19a"/>');
       s.push(seg(404, 0, 404, 1000, BRANCO, 4) + seg(596, 0, 596, 1000, BRANCO, 4));
-      s.push(cena.linha_central === "continua" ? seg(500, 0, 500, 1000, BRANCO, 5) : tracejado(500, 0, 500, 1000, BRANCO, 5, 40, 40));
+      // linha central: tracejada (por omissão), contínua (M1) ou mista (M3); «do teu lado» = lado de quem sobe (direita do eixo)
+      var lc = cena.linha_central;
+      if (lc === "continua") s.push(seg(500, 0, 500, 1000, BRANCO, 5));
+      else if (lc === "mista_descontinua_do_teu_lado") s.push(seg(493, 0, 493, 1000, BRANCO, 4) + tracejado(507, 0, 507, 1000, BRANCO, 4, 40, 40));
+      else if (lc === "mista_continua_do_teu_lado") s.push(tracejado(493, 0, 493, 1000, BRANCO, 4, 40, 40) + seg(507, 0, 507, 1000, BRANCO, 4));
+      else { if (lc && lc !== "tracejada") avisos.push('Linha central "' + lc + '" desconhecida (tracejada, continua, mista_descontinua_do_teu_lado, mista_continua_do_teu_lado).'); s.push(tracejado(500, 0, 500, 1000, BRANCO, 5, 40, 40)); }
       (cena.marcos_berma || []).forEach(function (t) {
         var tt = Math.max(0, Math.min(1, +t)); s.push(marco(640, 960 - 920 * tt));
       });
@@ -818,6 +823,7 @@
     if (cena.sinal) linhas.push("Sinal em destaque: " + rotulo(cena.sinal));
     if (cena.saida_destacada) linhas.push("Saída destacada: " + cena.saida_destacada);
     if ((cena.marcos_berma || []).length) linhas.push("Marco na berma");
+    if (cena.linha_central) linhas.push("Linha central: " + ({ continua: "contínua (M1)", tracejada: "descontínua (M2)", mista_descontinua_do_teu_lado: "mista (M3), descontínua do teu lado", mista_continua_do_teu_lado: "mista (M3), contínua do teu lado" }[cena.linha_central] || cena.linha_central));
     colocados.forEach(function (e) {
       var l = (e.tu ? "TU · " : "") + NOMES[e.tipo] + " · " + e.lugarNome;
       if (e.junto_a) l += " · " + (e.posicao === "angulo_morto" ? "no ângulo morto" : (e.posicao || "ao_lado").replace("_", " ").replace("atras", "atrás").replace("a frente", "à frente")) + " de " + e.junto_a;
