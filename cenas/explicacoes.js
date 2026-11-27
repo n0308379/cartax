@@ -61,7 +61,7 @@
       { 1: "A prioridade dos veículos de socorro depende da marcha de urgência, assinalada com luzes e sirene. Sem elas, a ambulância cede a passagem ao entrar, como qualquer veículo.",
         2: "Estar à frente não dá prioridade. Quem entra pelo ramal de acesso cede a passagem a quem circula na autoestrada." },
       "Se a mesma ambulância ligar as luzes e a sirene, passa a estar em marcha de urgência: aí és tu que lhe facilitas a passagem (pergunta 6.2)."],
-    "4.1": ["O peão que já iniciou a travessia tem de a poder concluir em segurança. Passar perto ou buzinar põe-no em perigo.", "Art. 11.º, n.º 3; regra da passadeira a confirmar",
+    "4.1": ["O peão que já iniciou a travessia tem de a poder concluir em segurança. Passar perto ou buzinar põe-no em perigo.", "Código da Estrada, art. 103.º, n.º 2",
       { 1: "O peão que já iniciou a travessia tem de a poder concluir em segurança. Passar atrás dele, mesmo com espaço, põe-no em risco: paras antes da passadeira e esperas.",
         2: "Buzinar não apressa a travessia: assusta o peão e pode provocar uma queda. Paras antes da passadeira e esperas que conclua a travessia." },
       "Ao aproximares-te de uma passadeira, reduz a velocidade e observa os passeios: um peão parado junto à passadeira pode começar a atravessar."],
