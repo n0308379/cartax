@@ -351,7 +351,13 @@
     { id: "13.11", tema: "Marcas, semáforos e estacionamento",
       enunciado: "Numa entrada de cruzamento há um sinal STOP e um semáforo a funcionar, verde para ti. O que prevalece?",
       opcoes: [C("O semáforo: os sinais luminosos prevalecem sobre os sinais verticais", 1), C("O STOP: tens de parar na mesma"), C("A regra da prioridade à direita")],
-      cena: {"peca": "cruzamento_x", "sinais": {"sul": "stop"}, "semaforos": {"sul": "verde"}, "elementos": [{"id": "tu", "tipo": "ligeiro", "lugar": "sul", "avanco": 0.85, "tu": true}], "elementos_criticos": ["sinal STOP na tua entrada", "semáforo verde na tua entrada"]} }
+      cena: {"peca": "cruzamento_x", "sinais": {"sul": "stop"}, "semaforos": {"sul": "verde"}, "elementos": [{"id": "tu", "tipo": "ligeiro", "lugar": "sul", "avanco": 0.85, "tu": true}], "elementos_criticos": ["sinal STOP na tua entrada", "semáforo verde na tua entrada"]} },
+
+    /* ---------- Tema 15 — Princípios gerais (lote 7 do plano: unidades I-a, I-c e IV) ---------- */
+    { id: "15.19", tema: "Princípios gerais",
+      enunciado: "Num cruzamento sem sinais, um ciclista aproxima-se pela tua direita. Quem passa primeiro?",
+      opcoes: [C("O ciclista: vem da tua direita", 1), C("Tu: os automóveis têm prioridade sobre as bicicletas"), C("Quem for mais depressa")],
+      cena: {"peca": "cruzamento_x", "elementos": [{"id": "tu", "tipo": "ligeiro", "lugar": "sul", "avanco": 0.95, "tu": true}, {"id": "ciclista", "tipo": "bicicleta", "lugar": "este", "avanco": 0.8}], "elementos_criticos": ["cruzamento sem sinais nem semáforos", "ciclista a vir da tua direita"]} }
   ];
   if (typeof module !== "undefined" && module.exports) module.exports = BANCO;
   else global.CartaXBanco = BANCO;
