@@ -331,7 +331,13 @@
     { id: "11.19", tema: "Regras e manobras",
       enunciado: "Há um pesado parado na tua via e vem um ligeiro em sentido contrário. Não há espaço para passarem os dois ao mesmo tempo. Quem passa primeiro?",
       opcoes: [C("O ligeiro: cedes tu, porque tens de usar o lado esquerdo para contornar o pesado", 1), C("Tu, porque já estás junto ao pesado"), C("Quem chegar primeiro ao pesado")],
-      cena: {"peca": "estrada_2sentidos", "elementos": [{"id": "pesado", "tipo": "pesado", "lugar": "via", "avanco": 0.52, "estado": {"pisca": "ambos"}}, {"id": "tu", "tipo": "ligeiro", "lugar": "via", "junto_a": "pesado", "posicao": "atras", "tu": true}, {"id": "frente", "tipo": "ligeiro", "lugar": "sentido_contrario", "avanco": 0.22}], "elementos_criticos": ["pesado parado na tua via, com os quatro piscas", "ligeiro em sentido contrário"]} }
+      cena: {"peca": "estrada_2sentidos", "elementos": [{"id": "pesado", "tipo": "pesado", "lugar": "via", "avanco": 0.52, "estado": {"pisca": "ambos"}}, {"id": "tu", "tipo": "ligeiro", "lugar": "via", "junto_a": "pesado", "posicao": "atras", "tu": true}, {"id": "frente", "tipo": "ligeiro", "lugar": "sentido_contrario", "avanco": 0.22}], "elementos_criticos": ["pesado parado na tua via, com os quatro piscas", "ligeiro em sentido contrário"]} },
+
+    /* ---------- Tema 12 — O condutor e o veículo (lote 4 do plano: cintos e retenção de crianças, equipamento obrigatório, avaria, documentos, luzes, passageiros e carga) ---------- */
+    { id: "12.10", tema: "O condutor e o veículo",
+      enunciado: "O carro avariou numa estrada. O que fazes primeiro?",
+      opcoes: [C("Se possível, tiras o carro da faixa de rodagem e ligas os quatro piscas", 1), C("Ficas na faixa de rodagem, dentro do carro, à espera de ajuda"), C("Começas a reparar a avaria ali mesmo, na faixa de rodagem")],
+      cena: {"peca": "estrada_2sentidos", "elementos": [{"id": "tu", "tipo": "ligeiro", "lugar": "junto_berma", "avanco": 0.45, "tu": true, "estado": {"pisca": "ambos"}}], "elementos_criticos": ["o teu carro junto à berma, com os quatro piscas"]} }
   ];
   if (typeof module !== "undefined" && module.exports) module.exports = BANCO;
   else global.CartaXBanco = BANCO;
