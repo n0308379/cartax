@@ -1,4 +1,4 @@
-/* Perguntas do Banco de Perguntas que não têm cena desenhada (inclui o lote 1, «O condutor», e a 10.1 do lote 2).
+/* Perguntas do Banco de Perguntas que não têm cena desenhada (inclui o lote 1, «O condutor», a 10.1 do lote 2 e as perguntas sem cena do lote 3).
    imagem = o que está previsto no Banco («Sem cena» = pergunta de conhecimento; «Fotografia IA» = por fazer). */
 (function (global) {
   var C = function (t, certa) { return [t, !!certa]; };
@@ -77,7 +77,29 @@
     { id: "9.20", tema: "O condutor", enunciado: "Quando deves programar o GPS?",
       opcoes: [C("Antes de arrancar, com o carro parado", 1), C("Durante a marcha, numa reta"), C("Parado num semáforo vermelho")], imagem: "Fotografia IA · interior do carro, GPS no tablier, vista do lugar do condutor" },
     { id: "10.1", tema: "Sinais verticais", enunciado: "Os sinais de regulamentação transmitem obrigações, restrições ou proibições. Qual destes NÃO é um sinal de regulamentação?",
-      opcoes: [C("Sinal de perigo", 1), C("Sinal de cedência de passagem"), C("Sinal de proibição")], imagem: "Sem cena" }
+      opcoes: [C("Sinal de perigo", 1), C("Sinal de cedência de passagem"), C("Sinal de proibição")], imagem: "Sem cena" },
+    { id: "11.1", tema: "Regras e manobras", enunciado: "Conduzes um ligeiro de passageiros dentro de uma localidade, numa rua sem sinal de limite de velocidade. Qual é a velocidade máxima?",
+      opcoes: [C("50 km/h", 1), C("40 km/h"), C("60 km/h")], imagem: "Sem cena" },
+    { id: "11.3", tema: "Regras e manobras", enunciado: "Conduzes um ligeiro de passageiros com reboque numa autoestrada. Qual é a velocidade máxima?",
+      opcoes: [C("100 km/h", 1), C("120 km/h"), C("80 km/h")], imagem: "Sem cena" },
+    { id: "11.4", tema: "Regras e manobras", enunciado: "Numa estrada com limite de 90 km/h, é de noite, chove e há curvas seguidas. A que velocidade circulas?",
+      opcoes: [C("À velocidade que te permita parar no espaço livre e visível à tua frente", 1), C("A 90 km/h, porque é o limite"), C("A 80 km/h, sempre 10 km/h abaixo do limite")], imagem: "Sem cena" },
+    { id: "11.5", tema: "Regras e manobras", enunciado: "Em qual destas situações a lei manda moderar especialmente a velocidade?",
+      opcoes: [C("À aproximação de uma escola sinalizada", 1), C("Numa reta com boa visibilidade e sem trânsito"), C("Ao entrar na autoestrada pela via de aceleração")], imagem: "Sem cena" },
+    { id: "11.6", tema: "Regras e manobras", enunciado: "Circulas muito abaixo do limite, sem nenhum motivo, e forma-se uma fila de carros atrás de ti. Estás a cumprir a lei?",
+      opcoes: [C("Não: é proibido circular tão devagar que se embaracem os outros sem justificação", 1), C("Sim: a lei só fixa velocidades máximas"), C("Sim, desde que não estejas numa autoestrada")], imagem: "Sem cena" },
+    { id: "11.9", tema: "Regras e manobras", enunciado: "Dentro de uma localidade, numa avenida com duas vias de trânsito no teu sentido, vais virar à esquerda no próximo cruzamento. Que via usas?",
+      opcoes: [C("A da esquerda, a mais conveniente ao teu destino", 1), C("A da direita, porque se circula sempre pela direita"), C("Qualquer uma, e mudas de via já dentro do cruzamento")], imagem: "Sem cena" },
+    { id: "11.10", tema: "Regras e manobras", enunciado: "O trânsito está intenso e forma filas nas duas vias do teu sentido. A fila da direita começa a andar mais depressa. Podes passar para ela para avançar mais rápido?",
+      opcoes: [C("Não: em filas paralelas, só passas para a direita para mudar de direção, parar ou estacionar", 1), C("Sim, desde que sinalizes com o pisca"), C("Sim, porque se deve circular pela via mais à direita")], imagem: "Sem cena" },
+    { id: "11.13", tema: "Regras e manobras", enunciado: "Num cruzamento entre duas vias com trânsito nos dois sentidos, vais virar à esquerda. Como fazes a manobra em relação ao centro do cruzamento?",
+      opcoes: [C("Deixas o centro do cruzamento à tua esquerda", 1), C("Cortas por dentro, deixando o centro do cruzamento à tua direita"), C("Tanto faz, desde que sinalizes com o pisca")], imagem: "Sem cena" },
+    { id: "11.16", tema: "Regras e manobras", enunciado: "Em qual destes locais é proibido inverter o sentido de marcha?",
+      opcoes: [C("Numa ponte", 1), C("Numa reta larga, com boa visibilidade e sem trânsito"), C("Numa rotunda, dando a volta completa")], imagem: "Sem cena" },
+    { id: "11.17", tema: "Regras e manobras", enunciado: "Quando é permitido fazer marcha atrás?",
+      opcoes: [C("Só como manobra auxiliar ou de recurso, devagar e no menor trajeto possível", 1), C("Sempre que a via esteja livre, à velocidade que quiseres"), C("Sempre que ligares os quatro piscas")], imagem: "Sem cena" },
+    { id: "11.20", tema: "Regras e manobras", enunciado: "Numa estrada estreita e muito inclinada, não há espaço para dois veículos se cruzarem. Tu vais a descer e vem outro a subir. Quem cede a passagem?",
+      opcoes: [C("Tu, que vais a descer", 1), C("O que vem a subir"), C("Quem chegar depois a esse troço")], imagem: "Sem cena" }
   ];
   if (typeof module !== "undefined" && module.exports) module.exports = L;
   else global.CartaXSemCena = L;
